@@ -61,6 +61,9 @@ Funções novas que mexem em dados: sempre oferecer **simulação** antes e back
 - Para checar data num valor de célula use `Object.prototype.toString.call(v) === '[object Date]'`.
 - **Nunca escrever `/*` dentro do `<script>` do `Index.html`, nem em string** (ex.: `'image/*'`): publicado, travou a tela inteira.
   Em HTML (atributo `accept="image/*"`) não tem problema.
+- **Nem `//` dentro de texto no `<script>`** (ex.: `'https://...'`): publicado, deu `SyntaxError: Invalid or unexpected token`
+  e a tela não carregou (16/11/2026). Montar em partes (`'https:' + '/' + '/...'`, ver `URL_DRIVE`). Comentário `//` normal pode.
+  Conferir antes de publicar: nenhuma linha do script com aspas seguidas de `//`.
 
 ## Testar antes de entregar
 - Sintaxe do servidor: `node --check` numa cópia `.js` do `Code.gs`.

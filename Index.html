@@ -374,6 +374,9 @@ function toast(msg, err) {
   clearTimeout(t._h); t._h = setTimeout(() => t.className = '', err ? 5000 : 2500);
 }
 function carregando(on) { $('loading').style.display = on ? 'flex' : 'none'; }
+// Erro inesperado na tela (ex.: num botão) aparece na faixa vermelha em vez de falhar em silêncio
+window.addEventListener('error', e => { carregando(false); toast('Erro na tela: ' + (e.message || e.error), true); });
+window.addEventListener('unhandledrejection', e => { carregando(false); toast('Erro na tela: ' + ((e.reason && e.reason.message) || e.reason), true); });
 
 async function chamar(fn, ...args) {
   carregando(true);
@@ -1231,6 +1234,8 @@ $('v-hist').addEventListener('click', async e => {
 // =====================================================================
 // Dados de exemplo (usados só fora do Google, para pré-visualização)
 // =====================================================================
+// Endereço montado em partes: barra-barra dentro de texto no script trava o app publicado (o Google lê como comentário)
+const URL_DRIVE = 'https:' + '/' + '/drive.google.com/file/d/';
 const MOCK = (() => {
   const hoje = new Date(), pad = n => String(n).padStart(2, '0');
   const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -1266,7 +1271,7 @@ const MOCK = (() => {
     tipo, desc, fornecedor: '', iniData: ini, venceData, repMeses, anexo: '', situacao: 'ATIVO',
     concluido: '', obs: '', anterior: '', usuario: 'BRUNO', ...(extra || {}) });
   let venc = [
-    vn('Garantia', 'Geladeira', dias(75), vd(290), '', { fornecedor: 'MAGAZINE', anexo: 'https://drive.google.com/file/d/nota' }),
+    vn('Garantia', 'Geladeira', dias(75), vd(290), '', { fornecedor: 'MAGAZINE', anexo: URL_DRIVE + 'nota' }),
     vn('Garantia', 'Micro-ondas', dias(60), vd(20), ''),
     vn('Garantia', 'Sofá 3 lugares', dias(120), vd(245), '')
   ];
@@ -1278,13 +1283,13 @@ const MOCK = (() => {
         const n = it.parcelas || 1, c = Math.round(it.valor * 100), b = it.valorTotal ? Math.floor(c / n) : c;
         for (let p = 0; p < n; p++) desp.push({ row: r++, venc: addMes(it.venc.slice(0, 7), p) + it.venc.slice(7), pgto: p ? '' : it.pgto, cat: it.cat,
           valor: (it.valorTotal && p === n - 1 ? c - b * (n - 1) : b) / 100, desc: n > 1 ? `${it.desc} (${p + 1}/${n})` : it.desc,
-          anexo: (it.anexos || []).map(a => 'https://drive.google.com/file/d/' + a.name).join(', '), usuario: 'BRUNO' });
+          anexo: (it.anexos || []).map(a => URL_DRIVE + a.name).join(', '), usuario: 'BRUNO' });
       });
       return { desp };
     },
     despMarcarPago: (row, desc, data) => { desp.find(x => x.row === row).pgto = data; return { desp }; },
     despExcluir: row => { desp = desp.filter(x => x.row !== row); return { desp }; },
-    despAnexar: (row, desc, a) => { const d = desp.find(x => x.row === row); d.anexo = [d.anexo, 'https://drive.google.com/file/d/' + a.name].filter(Boolean).join(', '); return { desp }; },
+    despAnexar: (row, desc, a) => { const d = desp.find(x => x.row === row); d.anexo = [d.anexo, URL_DRIVE + a.name].filter(Boolean).join(', '); return { desp }; },
     fixaSalvar: it => {
       if (fixas.some(f => f.ativa && f.desc === it.desc)) throw new Error('Já existe a conta fixa ' + it.desc + '.');
       fixas.push({ row: r++, id: 'F' + String(fixas.length + 1).padStart(4, '0'), desc: it.desc, cat: it.cat, dia: it.dia, valor: it.valor || 0, ativa: true });
@@ -1293,13 +1298,13 @@ const MOCK = (() => {
     fixaDesativar: row => { fixas.find(f => f.row === row).ativa = false; return { fixas }; },
     vencSalvar: it => {
       const novo = vn(it.tipo, it.desc, it.iniData, it.venceData, it.repMeses,
-        { fornecedor: norm(it.fornecedor), anexo: it.anexo ? 'https://drive.google.com/file/d/' + it.anexo.name : '' });
+        { fornecedor: norm(it.fornecedor), anexo: it.anexo ? URL_DRIVE + it.anexo.name : '' });
       if (it.renovar) { const a = venc.find(x => x.row === it.renovar.row); a.situacao = 'CONCLUIDO'; a.concluido = it.iniData || today; a.obs = 'Renovado: ' + novo.id; novo.anterior = a.id; }
       venc.push(novo); return { venc };
     },
     vencConcluir: (row, id, data, obs, cancelar) => { const x = venc.find(v => v.row === row); x.situacao = cancelar ? 'CANCELADO' : 'CONCLUIDO'; x.concluido = data; if (obs) x.obs = obs; return { venc }; },
     vencReabrir: row => { const x = venc.find(v => v.row === row); x.situacao = 'ATIVO'; x.concluido = ''; return { venc }; },
-    vencAnexar: (row, id, a) => { const x = venc.find(v => v.row === row); x.anexo = [x.anexo, 'https://drive.google.com/file/d/' + a.name].filter(Boolean).join(', '); return { venc }; }
+    vencAnexar: (row, id, a) => { const x = venc.find(v => v.row === row); x.anexo = [x.anexo, URL_DRIVE + a.name].filter(Boolean).join(', '); return { venc }; }
   };
 })();
 </script>
