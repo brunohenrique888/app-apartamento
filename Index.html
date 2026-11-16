@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Apartamento</title>
+<style>
+  :root {
+    --bg: #f4f5f5; --card: #fff; --ink: #1d2426; --muted: #687478; --line: #e1e6e7;
+    --pri: #0f6e75; --pri-soft: #e0f0f1; --warn: #b4531a; --danger: #b42318;
+  }
+  body[data-mod=desp] { --pri: #0f6e75; --pri-soft: #e0f0f1; }
+  body[data-mod=venc] { --pri: #5b3fa0; --pri-soft: #ece7f6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); padding-bottom: 76px; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--pri); color: #fff; padding: 12px 16px 0; transition: background .2s; }
+  header h1 { margin: 0 0 10px; font-size: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  header h1 small { font-weight: 400; font-size: 12px; opacity: .85; }
+  nav.sub { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  nav.sub::-webkit-scrollbar { display: none; }
+  nav.sub button { flex: 1 0 auto; background: none; border: 0; color: #fff; opacity: .7; padding: 10px 4px; font: inherit; font-size: 13.5px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  nav.sub button.on { opacity: 1; border-color: #fff; font-weight: 600; }
+  .badge { background: #fff; color: var(--pri); border-radius: 10px; padding: 0 6px; font-size: 11px; font-weight: 700; margin-left: 2px; }
+  nav.mods { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  nav.mods button { flex: 1; border: 0; background: none; padding: 8px 4px 10px; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  nav.mods button span { font-size: 22px; line-height: 1; filter: grayscale(1); opacity: .6; }
+  nav.mods button.on { color: var(--pri); font-weight: 600; }
+  nav.mods button.on span { filter: none; opacity: 1; }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  label.f { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: 14px 0 6px; }
+  label.f:first-child { margin-top: 0; }
+  input[type=text], input[type=date], input[type=number], input[type=file], select { width: 100%; padding: 11px 12px; font: inherit; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+  input:focus, select:focus { outline: 2px solid var(--pri); outline-offset: -1px; }
+  .big { font-size: 24px !important; font-weight: 600; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; min-width: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; color: var(--ink); }
+  .chip.on { background: var(--pri); border-color: var(--pri); color: #fff; }
+  .chip.add { border-style: dashed; color: var(--muted); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .hint b.lk { color: var(--pri); cursor: pointer; }
+  .info { background: var(--pri-soft); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-top: 10px; }
+  .toggle { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 500; }
+  .toggle input { width: 20px; height: 20px; accent-color: var(--pri); }
+  details { margin-top: 14px; } summary { cursor: pointer; color: var(--pri); font-weight: 600; font-size: 14px; }
+  .btn { display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px; background: var(--pri); color: #fff; font: inherit; font-weight: 600; font-size: 16px; cursor: pointer; margin-top: 18px; }
+  .btn.sec { background: var(--pri-soft); color: var(--pri); margin-top: 10px; padding: 11px; font-size: 15px; }
+  .btn:disabled { opacity: .5; }
+  .sm { padding: 6px 10px; border-radius: 7px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+  .sm.ok { background: var(--pri); border-color: var(--pri); color: #fff; }
+  .sm.del { color: var(--danger); }
+  .item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .item:first-child { border-top: 0; }
+  .item .grow { flex: 1; min-width: 0; }
+  .item .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item.vi .t { white-space: normal; }
+  .item .s { font-size: 12px; color: var(--muted); }
+  .item .v { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+  .item input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--pri); flex: none; }
+  .item input.mini { width: 92px; padding: 6px 8px; text-align: right; flex: none; }
+  .atrasado .s { color: var(--warn); font-weight: 600; }
+  .pdata { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 0 10px; font-size: 13px; }
+  .pdata input[type=date] { width: auto; flex: 1; min-width: 150px; padding: 7px 10px; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .kpi .l { font-size: 12px; color: var(--muted); } .kpi .n { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi .d { font-size: 12px; } .up { color: var(--warn); } .down { color: #1f7a4a; }
+  .bar { margin: 8px 0; } .bar .lbl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px; gap: 8px; }
+  .bar .trk { height: 8px; background: var(--pri-soft); border-radius: 4px; overflow: hidden; } .bar .fill { height: 100%; background: var(--pri); border-radius: 4px; }
+  .mes { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .mes b { font-size: 17px; }
+  h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .empty { color: var(--muted); text-align: center; padding: 16px 0; }
+  #toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(200px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 10px; transition: transform .25s; z-index: 20; max-width: 90vw; }
+  #toast.show { transform: translateX(-50%) translateY(0); } #toast.err { background: var(--danger); }
+  #loading { position: fixed; inset: 0; background: rgba(244,245,245,.7); display: none; align-items: center; justify-content: center; z-index: 15; font-weight: 600; color: var(--pri); }
+  .hidden { display: none !important; }
+  /* Relatório: filtro de período, pizza e colunas por mês */
+  .per input[type=date] { padding: 8px 10px; }
+  .per .chips { margin-top: 10px; }
+  .pz { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: center; }
+  .pz svg { flex: none; }
+  .pz path { cursor: pointer; }
+  .pz ul { list-style: none; margin: 0; padding: 0; flex: 1 1 230px; min-width: 0; }
+  .pz li { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+  .pz li.fx { cursor: default; }
+  .pz li.on { background: var(--pri-soft); }
+  .pz li i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .pz li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pz li b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pz li small { color: var(--muted); width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
+  .tip { font-size: 13px; color: var(--muted); min-height: 18px; } .tip b { color: var(--ink); }
+  .cols { position: relative; height: 170px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid #c3c2b7; margin-top: 18px; }
+  .cols .gl { position: absolute; left: 0; right: 0; border-top: 1px solid #ecebe6; z-index: 1; pointer-events: none; }
+  .cols .gl span { position: absolute; left: 2px; top: -15px; font-size: 10px; color: #52514e; background: rgba(255,255,255,.85); padding: 0 3px; border-radius: 3px; }
+  .cols .c { flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: pointer; position: relative; }
+  .cols .c div { width: 100%; background: var(--pri); border-radius: 4px 4px 0 0; }
+  .cols.sel .c:not(.on) div { opacity: .4; }
+  .cols-x { display: flex; gap: 2px; font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .cols-x span { flex: 1; text-align: center; white-space: nowrap; overflow: visible; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 4px; font-size: 13px; }
+</style>
+</head>
+<body data-k="<?= chave ?>" data-mod="desp">
+<header>
+  <h1><span id="titulo">Apartamento</span> <small id="quem"></small></h1>
+  <nav class="sub" data-mod="desp">
+    <button data-tab="lancar" class="on">Lançar</button>
+    <button data-tab="fixas">Contas fixas <span class="badge hidden" id="d-bFix"></span></button>
+    <button data-tab="apagar">A pagar <span class="badge hidden" id="d-bPag"></span></button>
+    <button data-tab="resumo">Resumo</button>
+    <button data-tab="rel">Relatório</button>
+  </nav>
+  <nav class="sub hidden" data-mod="venc">
+    <button data-tab="lista" class="on">Situação <span class="badge hidden" id="v-bVenc"></span></button>
+    <button data-tab="novo">Novo</button>
+    <button data-tab="historico">Histórico</button>
+  </nav>
+</header>
+
+<main>
+<!-- ======================= DESPESAS ======================= -->
+<div class="mod" id="mod-desp">
+  <section id="d-tab-lancar">
+    <div class="card">
+      <label class="f" for="d-desc">Descrição</label>
+      <input type="text" id="d-desc" list="d-dlDesc" placeholder="Ex.: SOFÁ, GELADEIRA, JOGO DE PANELAS..." autocomplete="off">
+      <datalist id="d-dlDesc"></datalist>
+      <div class="hint" id="d-descHint"></div>
+
+      <label class="f" for="d-valor">Valor (R$)</label>
+      <input type="text" id="d-valor" class="big" inputmode="decimal" placeholder="0,00" autocomplete="off">
+
+      <label class="f">Categoria</label>
+      <div class="chips" id="d-chCat"></div>
+
+      <div class="row">
+        <div><label class="f" for="d-venc">Vencimento</label><input type="date" id="d-venc"></div>
+        <div id="d-pgtoBox"><label class="f" for="d-pgto">Pagamento</label><input type="date" id="d-pgto"></div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="d-pago" checked> Já está pago</label>
+
+      <label class="f">Parcelas</label>
+      <div class="chips" id="d-chParc">
+        <button type="button" class="chip on" data-n="1">À vista</button>
+        <button type="button" class="chip" data-n="2">2x</button>
+        <button type="button" class="chip" data-n="3">3x</button>
+        <button type="button" class="chip" data-n="4">4x</button>
+        <button type="button" class="chip" data-n="6">6x</button>
+        <button type="button" class="chip" data-n="10">10x</button>
+        <button type="button" class="chip" data-n="12">12x</button>
+        <input type="number" id="d-parcelas" min="1" max="60" value="1" style="width:72px;padding:6px 8px" aria-label="Outro número de parcelas">
+      </div>
+      <div id="d-modoBox" class="chips hidden" style="margin-top:8px">
+        <button type="button" class="chip on" data-modo="parcela">Valor digitado é de cada parcela</button>
+        <button type="button" class="chip" data-modo="total">Valor digitado é o total</button>
+      </div>
+      <div class="hint" id="d-parcHint"></div>
+
+      <details>
+        <summary>Comprovante / nota</summary>
+        <label class="f" for="d-anexo">Foto ou PDF</label>
+        <input type="file" id="d-anexo" accept="image/*,application/pdf" multiple>
+        <div id="d-anexoLista"></div>
+        <div class="hint">Pode escolher mais de um arquivo, de uma vez ou um de cada vez.</div>
+      </details>
+
+      <button class="btn" id="d-btnSalvar">Salvar lançamento</button>
+      <div class="hint" id="d-garHint"></div>
+    </div>
+    <div class="card">
+      <h3>Últimos lançamentos</h3>
+      <div id="d-ultimos"></div>
+    </div>
+  </section>
+
+  <section id="d-tab-fixas" class="hidden">
+    <div class="card">
+      <h3 id="d-fixTitulo">Contas fixas do mês</h3>
+      <div class="hint" style="margin:0 0 10px">Contas cadastradas que ainda não foram lançadas neste mês. Confira o valor e lance.</div>
+      <div id="d-fixPend"></div>
+      <div id="d-fixAcoes">
+        <label class="toggle"><input type="checkbox" id="d-fixPago"> Lançar já como pagas (na data de vencimento)</label>
+        <button class="btn" id="d-btnFix">Lançar selecionadas</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Cadastro de contas fixas</h3>
+      <div id="d-fixLista"></div>
+      <details id="d-fixNova">
+        <summary>+ Nova conta fixa</summary>
+        <label class="f" for="d-fixDesc">Descrição</label>
+        <input type="text" id="d-fixDesc" placeholder="Ex.: CONDOMÍNIO, ENERGIA, INTERNET" autocomplete="off">
+        <label class="f">Categoria</label>
+        <div class="chips" id="d-fixChCat"></div>
+        <div class="row">
+          <div><label class="f" for="d-fixDia">Dia do vencimento</label><input type="number" id="d-fixDia" min="1" max="31" inputmode="numeric"></div>
+          <div><label class="f" for="d-fixValor">Valor previsto (R$)</label><input type="text" id="d-fixValor" inputmode="decimal" placeholder="opcional" autocomplete="off"></div>
+        </div>
+        <div class="hint">O valor previsto é só uma sugestão: todo mês você confere antes de lançar.</div>
+        <button class="btn" id="d-btnFixSalvar">Salvar conta fixa</button>
+      </details>
+    </div>
+  </section>
+
+  <section id="d-tab-apagar" class="hidden">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Total em aberto</div><div class="n" id="d-pagTotal">—</div></div>
+      <div class="kpi"><div class="l">Vencidos</div><div class="n" id="d-pagVenc">—</div></div>
+    </div>
+    <div class="card"><div id="d-pagLista"></div></div>
+  </section>
+
+  <section id="d-tab-resumo" class="hidden">
+    <div class="mes">
+      <button class="sm" id="d-mesAnt">‹ Anterior</button>
+      <b id="d-mesNome"></b>
+      <button class="sm" id="d-mesProx">Próximo ›</button>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Pago no mês</div><div class="n" id="d-resTotal">—</div><div class="d" id="d-resDelta"></div></div>
+      <div class="kpi"><div class="l">Lançamentos</div><div class="n" id="d-resQtd">—</div><div class="d" id="d-resMedia"></div></div>
+    </div>
+    <div class="card"><h3>Por categoria</h3><div id="d-resCat"></div></div>
+    <div class="card"><h3>Lançamentos do mês</h3><div id="d-resLista"></div></div>
+  </section>
+
+  <section id="d-tab-rel" class="hidden">
+    <div class="card per"><div id="d-relPer"></div></div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Total pago</div><div class="n" id="d-relTotal">—</div><div class="d" id="d-relDelta"></div></div>
+      <div class="kpi"><div class="l">Média por mês</div><div class="n" id="d-relMedia">—</div><div class="d" id="d-relMeses"></div></div>
+      <div class="kpi"><div class="l">Lançamentos pagos</div><div class="n" id="d-relQtd">—</div><div class="d" id="d-relTicket"></div></div>
+      <div class="kpi"><div class="l">A pagar no período</div><div class="n" id="d-relAPagar">—</div><div class="d" id="d-relAPagarQ"></div></div>
+    </div>
+    <div class="card"><h3>Pago por mês</h3><div id="d-relMes"></div></div>
+    <div class="card"><h3>Por categoria</h3><div id="d-relCat"></div><div class="hint">Toque numa categoria para ver os lançamentos dela na consulta abaixo.</div></div>
+    <div class="card"><h3>Onde mais gastou</h3><div id="d-relTop"></div></div>
+    <div class="card">
+      <h3>Consultar lançamentos</h3>
+      <input type="text" id="d-relBusca" placeholder="Buscar por descrição, categoria ou valor" autocomplete="off">
+      <div class="chips" id="d-relSit" style="margin-top:10px">
+        <button type="button" class="chip on" data-v="pago">Pagos</button>
+        <button type="button" class="chip" data-v="apagar">A pagar</button>
+        <button type="button" class="chip" data-v="todos">Todos</button>
+        <span style="flex:1"></span>
+        <button type="button" class="chip on" data-o="data">Mais recentes</button>
+        <button type="button" class="chip" data-o="valor">Maior valor</button>
+      </div>
+      <div class="filtros" id="d-relResumo"></div>
+      <div id="d-relLista"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= VENCIMENTOS ======================= -->
+<div class="mod hidden" id="mod-venc">
+  <section id="v-tab-lista">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Vencidos</div><div class="n" id="v-kVenc">—</div></div>
+      <div class="kpi"><div class="l">Vencem em breve</div><div class="n" id="v-kBreve">—</div><div class="d" id="v-kGar"></div></div>
+    </div>
+    <div class="card">
+      <input type="text" id="v-busca" placeholder="Buscar: geladeira, seguro, sofá…" autocomplete="off">
+      <div class="chips" id="v-chFiltro" style="margin:10px 0 4px"></div>
+      <div id="v-lista"></div>
+    </div>
+  </section>
+
+  <section id="v-tab-novo" class="hidden">
+    <div class="card">
+      <div class="info hidden" id="v-renovInfo" style="margin:0 0 6px"></div>
+      <label class="f">Tipo</label>
+      <div class="chips" id="v-chTipo"></div>
+      <div class="hint" id="v-regraHint"></div>
+
+      <label class="f" for="v-desc">Descrição</label>
+      <input type="text" id="v-desc" autocomplete="off" placeholder="Ex.: Geladeira Brastemp · Sofá 3 lugares">
+      <label class="f" for="v-forn">Fornecedor / loja</label>
+      <input type="text" id="v-forn" autocomplete="off" list="v-dlForn">
+      <datalist id="v-dlForn"></datalist>
+
+      <label class="f" for="v-iniData">Início (compra / contratação)</label>
+      <input type="date" id="v-iniData">
+
+      <label class="f">Prazo a partir do início</label>
+      <div class="chips" id="v-chPrazo">
+        <button type="button" class="chip" data-m="3">3 meses</button>
+        <button type="button" class="chip" data-m="6">6 meses</button>
+        <button type="button" class="chip" data-m="12">1 ano</button>
+        <button type="button" class="chip" data-m="24">2 anos</button>
+        <button type="button" class="chip" data-m="36">3 anos</button>
+        <button type="button" class="chip" data-m="60">5 anos</button>
+      </div>
+      <label class="f" for="v-venceData">Vence em</label>
+      <input type="date" id="v-venceData">
+
+      <label class="toggle"><input type="checkbox" id="v-repete"> Repete (ao renovar, já sugere o próximo)</label>
+      <div id="v-repBox"><label class="f" for="v-repMeses">A cada (meses)</label><input type="number" id="v-repMeses" min="1" max="120"></div>
+
+      <details>
+        <summary>Nota / apólice / certificado</summary>
+        <label class="f" for="v-anexo">Foto ou PDF</label>
+        <input type="file" id="v-anexo" accept="image/*,application/pdf">
+      </details>
+
+      <button class="btn" id="v-btnSalvar">Salvar</button>
+      <button class="btn sec hidden" id="v-btnCancRenov">Cancelar renovação</button>
+    </div>
+  </section>
+
+  <section id="v-tab-historico" class="hidden">
+    <div class="card">
+      <input type="text" id="v-buscaH" placeholder="Buscar no histórico" autocomplete="off">
+      <div id="v-hist" style="margin-top:6px"></div>
+    </div>
+  </section>
+</div>
+</main>
+
+<nav class="mods">
+  <button data-mod="desp" class="on"><span>💰</span>Despesas</button>
+  <button data-mod="venc"><span>📅</span>Vencimentos</button>
+</nav>
+
+<div id="loading">Carregando…</div>
+<div id="toast"></div>
+
+<script>
+// =====================================================================
+// Base: ponte com o Apps Script, utilitários e navegação
+// =====================================================================
+const CHAVE = document.body.dataset.k;
+function api(fn, ...args) {
+  return new Promise((ok, fail) => {
+    if (window.google && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(ok).withFailureHandler(e => fail(e && e.message ? e : new Error(String(e))))[fn](CHAVE, ...args);
+    } else {
+      setTimeout(() => { try { ok(MOCK[fn](...args)); } catch (e) { fail(e); } }, 250);
+    }
+  });
+}
+
+const G = { user: null, hoje: '', mod: '', mods: ['desp', 'venc'] };
+const TITULOS = { desp: 'Despesas do Apartamento', venc: 'Vencimentos e Garantias' };
+const $ = id => document.getElementById(id);
+const brl = n => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const num = (n, c = 2) => (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c });
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dataBR = iso => iso ? iso.split('-').reverse().join('/') : '';
+const norm = s => String(s || '').trim().toUpperCase();
+const semAcento = s => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const nomeMes = ym => { const [y, m] = ym.split('-'); return MESES[+m - 1] + ' de ' + y; };
+const nomeMesCap = ym => nomeMes(ym).replace(/^./, c => c.toUpperCase());
+const addMes = (ym, n) => { let [y, m] = ym.split('-').map(Number); m += n; while (m > 12) { m -= 12; y++; } while (m < 1) { m += 12; y--; } return y + '-' + String(m).padStart(2, '0'); };
+const diasNoMes = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).getDate(); };
+
+// Categorias de despesa que já aparecem desde o início; outras são criadas no "+ nova"
+const CATS_DESP = ['MÓVEIS E DECORAÇÃO', 'ELETRO', 'UTILIDADES', 'OUTROS'];
+
+function parseNum(s) {
+  s = String(s || '').replace(/[R$\s]/g, '');
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function toast(msg, err) {
+  const t = $('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(t._h); t._h = setTimeout(() => t.className = '', err ? 5000 : 2500);
+}
+function carregando(on) { $('loading').style.display = on ? 'flex' : 'none'; }
+
+async function chamar(fn, ...args) {
+  carregando(true);
+  try { aplicar(await api(fn, ...args)); return true; }
+  catch (e) { toast(e.message || 'Erro ao comunicar com a planilha', true); return false; }
+  finally { carregando(false); }
+}
+
+function aplicar(res) {
+  if (res.usuario) { G.user = res.usuario; $('quem').textContent = G.user.nome; }
+  if (res.hoje) G.hoje = res.hoje;
+  if (res.fixas) F.dados = res.fixas;
+  if (res.desp) D.aplicar(res.desp);
+  if (res.fixas || res.desp) F.render();
+  if (res.venc) V.aplicar(res.venc);
+}
+
+function lerArquivo(file) {
+  return new Promise((ok, fail) => {
+    if (!file) return ok(null);
+    if (file.size > 15 * 1024 * 1024) return fail(new Error('Arquivo maior que 15 MB.'));
+    const r = new FileReader();
+    r.onload = () => ok({ name: file.name, mime: file.type || 'application/octet-stream', data: String(r.result).split(',')[1] });
+    r.onerror = () => fail(new Error('Não foi possível ler o arquivo.'));
+    r.readAsDataURL(file);
+  });
+}
+
+function barras(el, mapa, limite) {
+  const total = Object.values(mapa).reduce((s, v) => s + v, 0);
+  const ks = Object.keys(mapa).sort((a, b) => mapa[b] - mapa[a]).slice(0, limite || 99);
+  $(el).innerHTML = ks.length ? ks.map(k => `
+    <div class="bar"><div class="lbl"><span>${esc(k || '(sem)')}</span><span>${brl(mapa[k])} · ${total ? Math.round(mapa[k] / total * 100) : 0}%</span></div>
+    <div class="trk"><div class="fill" style="width:${mapa[ks[0]] ? (mapa[k] / mapa[ks[0]] * 100).toFixed(1) : 0}%"></div></div></div>`).join('')
+    : '<div class="empty">Sem dados</div>';
+}
+
+// Chips de escolha única com "+ nova" (categoria). onPick(valor) ao tocar; o mesmo chip de novo desmarca.
+function chipsEscolha(el, lista, atual, onPick, pergunta) {
+  if (atual && !lista.includes(atual)) lista = lista.concat(atual);
+  $(el).innerHTML = lista.map(v => `<button type="button" class="chip${v === atual ? ' on' : ''}" data-v="${esc(v)}">${esc(v)}</button>`).join('')
+    + '<button type="button" class="chip add" data-novo="1">+ nova</button>';
+  $(el).onclick = e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    if (b.dataset.novo) {
+      const v = norm(prompt(pergunta || 'Nova categoria:'));
+      if (!v) return;
+      onPick(lista.find(c => semAcento(c) === semAcento(v)) || v); // mesma categoria com outra grafia: usa a existente
+    } else onPick(atual === b.dataset.v ? '' : b.dataset.v);
+  };
+}
+
+// =====================================================================
+// Relatórios: período, agrupamentos e gráficos (pizza e colunas por mês)
+// =====================================================================
+// Cores das categorias (ordem fixa, testada para daltonismo). Do 8º em diante vira "Outros" em cinza.
+const PAL = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], COR_OUTROS = '#b5b3ab';
+const soma = (l, val) => l.reduce((s, r) => s + (val ? val(r) : r.valor || 0), 0);
+function agrupar(l, chave, val) {
+  const m = {};
+  l.forEach(r => { const k = chave(r); m[k] = (m[k] || 0) + (val ? val(r) : r.valor || 0); });
+  return m;
+}
+// Cor fixa por item, pela ordem do total em todo o histórico: a cor não muda quando o filtro muda
+function coresFixas(mapa) {
+  const m = {};
+  Object.keys(mapa).sort((a, b) => mapa[b] - mapa[a]).slice(0, PAL.length).forEach((k, i) => m[k] = PAL[i]);
+  return m;
+}
+const curto = n => n >= 1e6 ? num(n / 1e6, 1) + ' mi' : n >= 1e3 ? num(n / 1e3, n >= 1e4 ? 0 : 1) + ' mil' : num(n, 0);
+const anoAntes = iso => (+iso.slice(0, 4) - 1) + iso.slice(4);
+function mesesEntre(de, ate) {
+  const out = []; let m = de.slice(0, 7);
+  while (m <= ate.slice(0, 7) && out.length < 600) { out.push(m); m = addMes(m, 1); }
+  return out;
+}
+function escalaMax(max) {
+  const p = Math.pow(10, Math.floor(Math.log10(max)));
+  return [1, 2, 2.5, 5, 10].map(f => f * p).find(v => v >= max);
+}
+// Comparação com o mesmo período um ano antes (gastar mais = laranja, menos = verde)
+function deltaHTML(atual, ant, de, ate) {
+  const y = +de.slice(0, 4) - 1, rot = de.slice(0, 4) === ate.slice(0, 4) ? 'mesmo período de ' + y : 'um ano antes';
+  if (!(ant > 0)) return `<span style="color:var(--muted)">sem dados no ${rot}</span>`;
+  const p = (atual - ant) / ant * 100;
+  return `<span class="${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(0)}%</span> vs ${rot}`;
+}
+
+// O relatório só é redesenhado com a aba aberta; fechada, fica marcado para redesenhar ao abrir
+function relAtualizar() {
+  if ($('d-tab-rel').classList.contains('hidden')) D.relSujo = true;
+  else { D.relSujo = false; D.renderRel(); }
+}
+
+// Atalhos de período; "Tudo" começa na data mais antiga
+function atalhosPeriodo(inicio) {
+  const h = G.hoje, y = +h.slice(0, 4), ym = h.slice(0, 7), mp = addMes(ym, -1);
+  return [['Este ano', y + '-01-01', h], ['Ano passado', (y - 1) + '-01-01', (y - 1) + '-12-31'],
+    ['12 meses', addMes(ym, -11) + '-01', h], ['Este mês', ym + '-01', h],
+    ['Mês passado', mp + '-01', mp + '-' + String(diasNoMes(mp)).padStart(2, '0')]]
+    .concat(inicio && inicio < y + '-01-01' ? [['Tudo', inicio, h]] : []);
+}
+function filtroPeriodo(el, st, inicio, render) {
+  $(el).innerHTML = `<div class="row">
+      <div><label class="f">De</label><input type="date" data-p="de" value="${st.de}"></div>
+      <div><label class="f">Até</label><input type="date" data-p="ate" value="${st.ate}"></div></div>
+    <div class="chips">${atalhosPeriodo(inicio).map(([n, de, ate]) =>
+      `<button type="button" class="chip${st.de === de && st.ate === ate ? ' on' : ''}" data-de="${de}" data-ate="${ate}">${n}</button>`).join('')}</div>`;
+  $(el).onchange = e => {
+    const i = e.target.closest('[data-p]'); if (!i || !i.value) return;
+    st[i.dataset.p] = i.value;
+    if (st.de > st.ate) [st.de, st.ate] = [st.ate, st.de];
+    st.lim = 100; render();
+  };
+  $(el).onclick = e => {
+    const b = e.target.closest('[data-de]'); if (!b) return;
+    st.de = b.dataset.de; st.ate = b.dataset.ate; st.lim = 100; render();
+  };
+}
+
+// Soma por mês (ou por ano, se o período passar de 3 anos)
+function serieMensal(l, campo, de, ate) {
+  const ms = mesesEntre(de, ate), anual = ms.length > 36;
+  const ks = anual ? [...new Set(ms.map(m => m.slice(0, 4)))] : ms;
+  const t = agrupar(l.filter(r => r[campo]), r => anual ? r[campo].slice(0, 4) : r[campo].slice(0, 7));
+  const variosAnos = ks.length && ks[0].slice(0, 4) !== ks[ks.length - 1].slice(0, 4);
+  const pts = ks.map((k, i) => ({ v: t[k] || 0, tip: anual ? k : nomeMesCap(k),
+    rot: anual ? k : MESES[+k.slice(5) - 1].slice(0, 3) + (variosAnos && (i === 0 || k.slice(5) === '01') ? '/' + k.slice(2, 4) : '') }));
+  pts.unid = anual ? 'ano' : 'mês';
+  return pts;
+}
+
+// Colunas por mês. Tocar/passar o mouse numa coluna mostra o valor na linha de cima.
+function colunas(el, pts) {
+  const box = $(el), vals = pts.map(p => p.v), max = Math.max(0, ...vals);
+  if (!max) { box.innerHTML = '<div class="empty">Sem dados no período</div>'; return; }
+  const passo = Math.ceil(pts.length / 12), n = pts.length, topo = escalaMax(max);
+  const y = v => (v / topo * 100).toFixed(2);
+  const padrao = `Média <b>${brl(soma(vals, v => v) / n)}</b> por ${pts.unid || 'mês'} · maior: <b>${brl(max)}</b>`;
+  box.innerHTML = `<div class="tip">${padrao}</div>
+    <div class="cols">${[0.5, 1].map(f => `<div class="gl" style="bottom:${f * 100}%"><span>${curto(topo * f)}</span></div>`).join('')}
+    ${pts.map((p, i) => `<div class="c" data-i="${i}" title="${esc(p.tip)}: ${brl(p.v)}"><div style="height:${y(p.v)}%"></div></div>`).join('')}</div>
+    <div class="cols-x">${pts.map((p, i) => `<span>${i % passo ? '' : esc(p.rot)}</span>`).join('')}</div>`;
+  const cols = box.querySelector('.cols'), tip = box.querySelector('.tip');
+  const marcar = c => {
+    cols.querySelectorAll('.c').forEach(x => x.classList.toggle('on', x === c));
+    cols.classList.toggle('sel', !!c);
+    tip.innerHTML = c ? `<b>${esc(pts[+c.dataset.i].tip)}</b>: ${brl(pts[+c.dataset.i].v)}` : padrao;
+  };
+  cols.onclick = e => { const c = e.target.closest('.c'); marcar(c && !c.classList.contains('on') ? c : null); };
+  cols.onmouseover = e => { const c = e.target.closest('.c'); if (c) marcar(c); };
+  cols.onmouseleave = () => marcar(null);
+}
+
+// Pizza (rosca) com legenda de valores e %. cores = coresFixas(); sel = item escolhido; onPick(k) ao tocar
+function pizza(el, mapa, cores, sel, onPick) {
+  const box = $(el);
+  let itens = Object.keys(mapa).filter(k => mapa[k] > 0).map(k => ({ k, v: mapa[k], cor: cores[k] }));
+  const total = soma(itens, i => i.v);
+  if (!total) { box.innerHTML = '<div class="empty">Sem dados no período</div>'; return; }
+  const fora = itens.filter(i => !i.cor);
+  itens = itens.filter(i => i.cor).sort((a, b) => b.v - a.v);
+  if (fora.length === 1) itens.push({ ...fora[0], cor: COR_OUTROS });
+  else if (fora.length) itens.push({ k: `Outros (${fora.length})`, v: soma(fora, i => i.v), cor: COR_OUTROS, fx: true });
+  const R = 72, r = 46, C = 80;
+  const pt = (a, rad) => (C + rad * Math.cos(a)).toFixed(2) + ' ' + (C + rad * Math.sin(a)).toFixed(2);
+  let a0 = -Math.PI / 2;
+  const fatias = itens.map(i => {
+    const ang = Math.min(i.v / total * Math.PI * 2, Math.PI * 2 - 0.0001), a1 = a0 + ang, big = ang > Math.PI ? 1 : 0;
+    const d = `M${pt(a0, R)} A${R} ${R} 0 ${big} 1 ${pt(a1, R)} L${pt(a1, r)} A${r} ${r} 0 ${big} 0 ${pt(a0, r)}Z`;
+    a0 = a1;
+    return `<path d="${d}" fill="${i.cor}" stroke="#fff" stroke-width="2" data-k="${esc(i.k)}"${i.fx ? ' data-fx="1"' : ''}${sel && sel !== i.k ? ' opacity=".35"' : ''}><title>${esc(i.k)}: ${brl(i.v)}</title></path>`;
+  }).join('');
+  const pct = v => { const p = v / total * 100; return p < 1 ? '&lt;1%' : Math.round(p) + '%'; };
+  box.innerHTML = `<div class="pz"><svg width="160" height="160" viewBox="0 0 160 160" role="img">${fatias}
+      <text x="80" y="76" text-anchor="middle" font-size="11" fill="#687478">total</text>
+      <text x="80" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2426">R$ ${curto(total)}</text></svg>
+    <ul>${itens.map(i => `<li data-k="${esc(i.k)}" class="${sel === i.k ? 'on' : ''}${i.fx ? ' fx' : ''}"${i.fx ? ' data-fx="1"' : ''}><i style="background:${i.cor}"></i><span>${esc(i.k)}</span><b>${brl(i.v)}</b><small>${pct(i.v)}</small></li>`).join('')}</ul></div>`;
+  box.onclick = e => {
+    const t = e.target.closest('[data-k]'); if (!t || t.dataset.fx || !onPick) return;
+    onPick(t.dataset.k === sel ? '' : t.dataset.k);
+  };
+}
+
+// Botões de baixa: "Pago hoje" e 📅 para escolher a data
+function botoesPagar(row, rotulo) {
+  return `<button class="sm ok" data-pagar="${row}">${rotulo}</button>`
+    + `<button class="sm" data-pagardata="${row}" title="Pago em outra data">📅</button>`;
+}
+
+// Abre, logo abaixo do item, a escolha da data do pagamento (sugere o vencimento, se já passou)
+function abrirDataPagto(btn, venc, row) {
+  const item = btn.closest('.item');
+  const aberto = item.nextElementSibling && item.nextElementSibling.classList.contains('pdata');
+  btn.closest('.mod').querySelectorAll('.pdata').forEach(p => p.remove());
+  if (aberto) return;
+  const sug = venc && venc < G.hoje ? venc : G.hoje;
+  item.insertAdjacentHTML('afterend', `<div class="pdata">Pago em <input type="date" value="${sug}" max="${G.hoje}">`
+    + `<button class="sm ok" data-confpg="${row}">Confirmar</button><button class="sm" data-cancpg="1">Cancelar</button></div>`);
+}
+
+function trocarModulo(mod) {
+  if (!G.mods.includes(mod)) mod = G.mods[0];
+  G.mod = mod;
+  document.body.dataset.mod = mod;
+  $('titulo').textContent = TITULOS[mod];
+  document.querySelectorAll('nav.mods button').forEach(b => b.classList.toggle('on', b.dataset.mod === mod));
+  document.querySelectorAll('nav.sub').forEach(n => n.classList.toggle('hidden', n.dataset.mod !== mod));
+  document.querySelectorAll('.mod').forEach(m => m.classList.toggle('hidden', m.id !== 'mod-' + mod));
+  try { localStorage.setItem('apto-modulo', mod); } catch (e) {}
+  window.scrollTo(0, 0);
+}
+
+document.querySelector('nav.mods').onclick = e => { const b = e.target.closest('button'); if (b) trocarModulo(b.dataset.mod); };
+document.querySelectorAll('nav.sub').forEach(nav => nav.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const p = { desp: 'd', venc: 'v' }[nav.dataset.mod];
+  nav.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); // no celular a última aba pode ficar meio escondida
+  if (b.dataset.tab === 'rel' && D.relSujo) { D.relSujo = false; D.renderRel(); }
+  document.querySelectorAll(`#mod-${nav.dataset.mod} > section`).forEach(s => s.classList.toggle('hidden', s.id !== `${p}-tab-${b.dataset.tab}`));
+  window.scrollTo(0, 0);
+}));
+
+// Célula de anexo pode ter vários links (separados por vírgula, espaço, ; ou linha): um link para cada, sem repetir
+function linksAnexo(txt, rotulo) {
+  const urls = [...new Set(String(txt || '').match(/https?:\/\/[^\s,;]+/g) || [])];
+  rotulo = rotulo || 'anexo';
+  return urls.map((u, i) => ` · <a href="${esc(u)}" target="_blank">${rotulo}${urls.length > 1 ? ' ' + (i + 1) : ''}</a>`).join('');
+}
+
+// Link "📎 anexar" para incluir mais um arquivo num lançamento já gravado
+const linkAnexar = row => ` · <a href="#" class="anexar" data-anexar="${row}">📎 anexar</a>`;
+
+// Abre o seletor de arquivo; ao escolher, lê e envia ao servidor (fn = função do Code.gs, args antes do anexo)
+function anexarArquivo(fn, args) {
+  const inp = document.createElement('input');
+  // Mesmos tipos do campo de anexo da tela (sem escrever "barra-asterisco" aqui: o Google pode ler como comentário)
+  inp.type = 'file'; inp.accept = $('d-anexo').accept;
+  inp.onchange = async () => {
+    let anexo;
+    try { anexo = await lerArquivo(inp.files[0]); } catch (e) { return toast(e.message, true); }
+    if (anexo && await chamar(fn, ...args, anexo)) toast('Anexo incluído ✓');
+  };
+  inp.click();
+}
+
+// =====================================================================
+// Módulo: Despesas
+// =====================================================================
+const D = {
+  dados: [], cat: '', mes: '', ultimoDesc: null, modoTotal: false, porDesc: {}, relSujo: false,
+  rel: { de: '', ate: '', sit: 'pago', ord: 'data', busca: '', fCat: '', lim: 100 },
+
+  aplicar(lanc) {
+    D.dados = lanc;
+    if (!D.mes) D.mes = G.hoje.slice(0, 7);
+    D.coresCat = coresFixas(agrupar(lanc.filter(d => d.pgto), D.chCat));
+    D.montarListas(); D.renderUltimos(); D.renderAPagar(); D.renderResumo(); relAtualizar();
+  },
+
+  chCat: d => norm(d.cat) || '(SEM CATEGORIA)',
+  semParcela: s => norm(s).replace(/\s*\(\d+\/\d+\)$/, ''),
+
+  // As 4 categorias iniciais primeiro; depois as criadas, das mais usadas para as menos
+  categorias() {
+    const c = {};
+    D.dados.forEach(d => { const k = norm(d.cat); if (k && !CATS_DESP.includes(k)) c[k] = (c[k] || 0) + 1; });
+    return CATS_DESP.concat(Object.keys(c).sort((a, b) => c[b] - c[a]));
+  },
+
+  montarListas() {
+    const m = {};
+    D.dados.forEach(d => {
+      const k = D.semParcela(d.desc); if (!k) return;
+      if (!m[k]) m[k] = { n: 0 };
+      m[k].n++;
+      if (!m[k].ult || d.venc >= m[k].ult.venc) m[k].ult = d;
+    });
+    D.porDesc = m;
+    $('d-dlDesc').innerHTML = Object.keys(m).sort((a, b) => m[b].n - m[a].n).slice(0, 400).map(k => `<option value="${esc(k)}">`).join('');
+    D.chipsCat();
+  },
+
+  chipsCat() {
+    chipsEscolha('d-chCat', D.categorias(), D.cat, v => { D.cat = v; D.chipsCat(); }, 'Nova categoria de despesa:');
+  },
+
+  aoDigitarDesc() {
+    const k = D.semParcela($('d-desc').value);
+    const info = D.porDesc[k];
+    if (!info) { $('d-descHint').innerHTML = ''; return; }
+    const u = info.ult;
+    if (D.ultimoDesc !== k) {
+      D.ultimoDesc = k;
+      if (u.cat) { D.cat = norm(u.cat); D.chipsCat(); }
+    }
+    $('d-descHint').innerHTML = `Último: ${brl(u.valor)} em ${dataBR(u.venc)} · ${esc(u.cat)} — <b class="lk" id="d-usarValor">usar este valor</b>`;
+    $('d-usarValor').onclick = () => { $('d-valor').value = u.valor.toFixed(2).replace('.', ','); D.atualizarParcHint(); };
+  },
+
+  atualizarPago() {
+    const on = $('d-pago').checked;
+    $('d-pgtoBox').style.visibility = on ? 'visible' : 'hidden';
+    if (on && !$('d-pgto').value) $('d-pgto').value = $('d-venc').value;
+  },
+
+  // Valor de cada parcela, considerando se o digitado é o total
+  valorParcela() {
+    const n = parseInt($('d-parcelas').value, 10) || 1, v = parseNum($('d-valor').value);
+    return D.modoTotal && n > 1 ? Math.floor(v * 100 / n) / 100 : v;
+  },
+
+  atualizarParcHint() {
+    const n = Math.max(1, parseInt($('d-parcelas').value, 10) || 1);
+    document.querySelectorAll('#d-chParc .chip').forEach(c => c.classList.toggle('on', +c.dataset.n === n));
+    document.querySelectorAll('#d-modoBox .chip').forEach(c => c.classList.toggle('on', (c.dataset.modo === 'total') === !!D.modoTotal));
+    $('d-modoBox').classList.toggle('hidden', n === 1);
+    const v = parseNum($('d-valor').value), vp = D.valorParcela(), total = D.modoTotal ? v : v * n;
+    if (n === 1 || !v || !$('d-venc').value) { $('d-parcHint').textContent = ''; return; }
+    const fim = addMes($('d-venc').value.slice(0, 7), n - 1);
+    const ultima = D.modoTotal ? Math.round(v * 100 - vp * 100 * (n - 1)) / 100 : vp;
+    $('d-parcHint').innerHTML = `Serão criados <b style="color:var(--ink)">${n} lançamentos</b> de ${brl(vp)}`
+      + (Math.abs(ultima - vp) > 0.001 ? ` (última ${brl(ultima)})` : '')
+      + ` · total ${brl(total)} · de ${nomeMes($('d-venc').value.slice(0, 7))} a ${nomeMes(fim)}, todo dia ${+$('d-venc').value.slice(8)}.`
+      + ($('d-pago').checked ? ' Só a 1ª entra como paga; as demais ficam em "A pagar".' : ' Todas ficam em "A pagar".');
+  },
+
+  async salvar() {
+    const item = {
+      desc: norm($('d-desc').value), valor: parseNum($('d-valor').value),
+      cat: D.cat, venc: $('d-venc').value,
+      pgto: $('d-pago').checked ? ($('d-pgto').value || $('d-venc').value) : '',
+      parcelas: parseInt($('d-parcelas').value, 10) || 1
+    };
+    item.valorTotal = item.parcelas > 1 && !!D.modoTotal;
+    const vp = item.valorTotal ? D.valorParcela() : item.valor; // valor de cada parcela, para as conferências abaixo
+    const falta = [!item.desc && 'descrição', !(item.valor > 0) && 'valor', !item.cat && 'categoria', !item.venc && 'vencimento'].filter(Boolean);
+    if (falta.length) return toast('Falta preencher: ' + falta.join(', '), true);
+
+    // Alerta de possível duplicidade: mesma descrição e valor no mesmo mês
+    const dup = D.dados.find(d => D.semParcela(d.desc) === D.semParcela(item.desc) && Math.abs(d.valor - vp) < 0.01 && d.venc.slice(0, 7) === item.venc.slice(0, 7));
+    if (dup && !confirm(`Já existe "${dup.desc}" de ${brl(dup.valor)} em ${dataBR(dup.venc)}. Lançar mesmo assim?`)) return;
+
+    if (D.arquivos.reduce((s, f) => s + f.size, 0) > 30 * 1024 * 1024) return toast('Os anexos somam mais de 30 MB. Tire algum ou anexe depois pelo 📎.', true);
+    try { item.anexos = await Promise.all(D.arquivos.map(lerArquivo)); } catch (e) { return toast(e.message, true); }
+
+    $('d-btnSalvar').disabled = true;
+    const ok = await chamar('despSalvar', [item]);
+    $('d-btnSalvar').disabled = false;
+    if (!ok) return;
+    toast(item.parcelas > 1 ? `${item.parcelas} parcelas lançadas ✓` : 'Lançamento salvo ✓');
+    // Móveis e eletro costumam ter garantia: lembra de cadastrar
+    $('d-garHint').innerHTML = ['MÓVEIS E DECORAÇÃO', 'ELETRO'].includes(item.cat)
+      ? `Tem garantia? <b class="lk" id="d-garLink" style="color:var(--pri);cursor:pointer">Cadastrar a garantia de ${esc(item.desc)}</b>` : '';
+    if ($('d-garLink')) $('d-garLink').onclick = () => { V.novaGarantia(item.desc, item.pgto || item.venc); $('d-garHint').innerHTML = ''; };
+    // Mantém categoria e datas para agilizar o próximo
+    $('d-desc').value = ''; $('d-valor').value = ''; $('d-parcelas').value = 1; $('d-anexo').value = ''; D.arquivos = []; D.renderArquivos();
+    $('d-descHint').innerHTML = ''; D.ultimoDesc = null; D.modoTotal = false; D.atualizarParcHint();
+  },
+
+  // Anexos escolhidos para o próximo lançamento (dá para escolher várias vezes; cada um some no ✕)
+  arquivos: [],
+  renderArquivos() {
+    $('d-anexoLista').innerHTML = D.arquivos.map((f, i) => `<div class="item"><div class="grow"><div class="t" style="font-weight:400;font-size:14px">📎 ${esc(f.name)}</div>`
+      + `<div class="s">${num(f.size / 1024 / 1024, 1)} MB</div></div><button type="button" class="sm del" data-tirar="${i}" title="Tirar">✕</button></div>`).join('');
+  },
+
+  itemHTML(d, acoes) {
+    const sub = [dataBR(d.venc), d.cat].filter(Boolean).map(esc).join(' · ')
+      + (d.pgto ? (d.pgto !== d.venc ? ' · pago ' + dataBR(d.pgto) : '') : ' · <span style="color:var(--warn)">a pagar</span>')
+      + (d.usuario ? ' · por ' + esc(d.usuario) : '')
+      + linksAnexo(d.anexo) + linkAnexar(d.row);
+    return `<div class="item"><div class="grow"><div class="t">${esc(d.desc)}</div><div class="s">${sub}</div></div><div class="v">${brl(d.valor)}</div>${acoes || ''}</div>`;
+  },
+
+  btnExcluir: d => `<button class="sm del" data-del="${d.row}" title="Excluir">✕</button>`,
+
+  renderUltimos() {
+    const l = D.dados.slice().sort((a, b) => b.row - a.row).slice(0, 8);
+    $('d-ultimos').innerHTML = l.length ? l.map(d => D.itemHTML(d, D.btnExcluir(d))).join('') : '<div class="empty">Nenhum lançamento ainda</div>';
+  },
+
+  renderAPagar() {
+    const l = D.dados.filter(d => !d.pgto && d.venc).sort((a, b) => a.venc.localeCompare(b.venc));
+    const venc = l.filter(d => d.venc < G.hoje);
+    $('d-bPag').textContent = l.length; $('d-bPag').classList.toggle('hidden', !l.length);
+    $('d-pagTotal').textContent = brl(soma(l));
+    $('d-pagVenc').textContent = venc.length ? `${venc.length} · ${brl(soma(venc))}` : '0';
+    $('d-pagLista').innerHTML = l.length ? l.map(d => D.itemHTML(d, botoesPagar(d.row, 'Pago hoje'))
+      .replace('class="item"', d.venc < G.hoje ? 'class="item atrasado"' : 'class="item"')).join('')
+      : '<div class="empty">Nenhuma conta em aberto</div>';
+  },
+
+  renderResumo() {
+    // O mês é definido pela data de pagamento: entra só o que já foi pago, no mês em que foi pago
+    const doMes = ym => D.dados.filter(d => d.pgto && d.pgto.slice(0, 7) === ym);
+    const l = doMes(D.mes).sort((a, b) => b.pgto.localeCompare(a.pgto));
+    const total = soma(l), ant = soma(doMes(addMes(D.mes, -1)));
+    $('d-mesNome').textContent = nomeMesCap(D.mes);
+    $('d-resTotal').textContent = brl(total);
+    $('d-resQtd').textContent = l.length;
+    $('d-resMedia').textContent = l.length ? 'média ' + brl(total / l.length) : '';
+    if (ant > 0) {
+      const p = (total - ant) / ant * 100;
+      $('d-resDelta').innerHTML = `<span class="${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(0)}%</span> vs mês anterior`;
+    } else $('d-resDelta').textContent = '';
+    barras('d-resCat', agrupar(l, D.chCat));
+    $('d-resLista').innerHTML = l.length ? l.map(d => D.itemHTML(d, D.btnExcluir(d))).join('')
+      : '<div class="empty">Nenhum pagamento neste mês</div>';
+  },
+
+  // ---------- Relatório (período livre; o pago entra pela data de pagamento) ----------
+  noPer: iso => !!iso && iso >= D.rel.de && iso <= D.rel.ate,
+
+  renderRel() {
+    const R = D.rel;
+    if (!R.de) { R.de = G.hoje.slice(0, 4) + '-01-01'; R.ate = G.hoje; }
+    const inicio = D.dados.reduce((m, d) => { const x = d.pgto || d.venc; return x && x < m ? x : m; }, G.hoje);
+    filtroPeriodo('d-relPer', R, inicio, D.renderRel);
+
+    const pagosEntre = (de, ate) => D.dados.filter(d => d.pgto && d.pgto >= de && d.pgto <= ate);
+    const l = pagosEntre(R.de, R.ate), total = soma(l), meses = mesesEntre(R.de, R.ate).length;
+    $('d-relTotal').textContent = brl(total);
+    $('d-relDelta').innerHTML = deltaHTML(total, soma(pagosEntre(anoAntes(R.de), anoAntes(R.ate))), R.de, R.ate);
+    $('d-relMedia').textContent = brl(total / meses);
+    $('d-relMeses').textContent = meses === 1 ? 'em 1 mês' : `em ${meses} meses`;
+    $('d-relQtd').textContent = l.length;
+    $('d-relTicket').textContent = l.length ? 'média ' + brl(total / l.length) : '';
+    const ap = D.dados.filter(d => !d.pgto && D.noPer(d.venc)), atras = ap.filter(d => d.venc < G.hoje);
+    $('d-relAPagar').textContent = brl(soma(ap));
+    $('d-relAPagarQ').innerHTML = ap.length ? `${ap.length} conta(s)` + (atras.length ? ` · <span class="up">${atras.length} vencida(s)</span>` : '') : 'nada em aberto';
+
+    colunas('d-relMes', serieMensal(l, 'pgto', R.de, R.ate));
+    pizza('d-relCat', agrupar(l, D.chCat), D.coresCat, R.fCat, k => { R.fCat = k; R.lim = 100; D.renderRel(); });
+    barras('d-relTop', agrupar(l, d => D.semParcela(d.desc)), 10);
+    D.renderRelLista();
+  },
+
+  renderRelLista() {
+    const R = D.rel, b = norm(R.busca);
+    document.querySelectorAll('#d-relSit [data-v]').forEach(c => c.classList.toggle('on', c.dataset.v === R.sit));
+    document.querySelectorAll('#d-relSit [data-o]').forEach(c => c.classList.toggle('on', c.dataset.o === R.ord));
+    const ref = d => d.pgto || d.venc;
+    let l = D.dados.filter(d => (R.sit === 'pago' ? D.noPer(d.pgto) : R.sit === 'apagar' ? !d.pgto && D.noPer(d.venc) : D.noPer(ref(d)))
+      && (!R.fCat || D.chCat(d) === R.fCat)
+      && (!b || norm([d.desc, d.cat, d.usuario, brl(d.valor)].join(' ')).includes(b)));
+    l.sort(R.ord === 'valor' ? (x, y) => y.valor - x.valor : (x, y) => ref(y).localeCompare(ref(x)) || y.row - x.row);
+    $('d-relResumo').innerHTML = (R.fCat ? `<button type="button" class="chip on" data-limpa="fCat">Categoria: ${esc(R.fCat)} ✕</button>` : '')
+      + `<span>${l.length} lançamento(s) · <b>${brl(soma(l))}</b></span>`;
+    $('d-relLista').innerHTML = l.length ? l.slice(0, R.lim).map(d => D.itemHTML(d)).join('')
+      + (l.length > R.lim ? `<button class="btn sec" data-mais="1">Mostrar mais (${l.length - R.lim})</button>` : '')
+      : '<div class="empty">Nenhum lançamento encontrado</div>';
+  }
+};
+
+$('d-relBusca').addEventListener('input', e => { D.rel.busca = e.target.value; D.rel.lim = 100; D.renderRelLista(); });
+$('d-relSit').onclick = e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  if (c.dataset.v) D.rel.sit = c.dataset.v; else D.rel.ord = c.dataset.o;
+  D.rel.lim = 100; D.renderRelLista();
+};
+$('d-relResumo').onclick = e => { const c = e.target.closest('[data-limpa]'); if (c) { D.rel[c.dataset.limpa] = ''; D.renderRel(); } };
+$('d-relLista').addEventListener('click', e => { if (e.target.closest('[data-mais]')) { D.rel.lim += 100; D.renderRelLista(); } });
+
+$('d-anexo').addEventListener('change', () => {
+  [...$('d-anexo').files].forEach(f => { if (!D.arquivos.some(x => x.name === f.name && x.size === f.size)) D.arquivos.push(f); });
+  $('d-anexo').value = ''; // limpa para poder escolher mais (inclusive outra foto da câmera)
+  D.renderArquivos();
+});
+$('d-anexoLista').onclick = e => { const b = e.target.closest('[data-tirar]'); if (b) { D.arquivos.splice(+b.dataset.tirar, 1); D.renderArquivos(); } };
+$('d-desc').addEventListener('input', D.aoDigitarDesc);
+$('d-valor').addEventListener('input', D.atualizarParcHint);
+$('d-parcelas').addEventListener('input', D.atualizarParcHint);
+$('d-pago').addEventListener('change', () => { D.atualizarPago(); D.atualizarParcHint(); });
+$('d-venc').addEventListener('change', () => { if ($('d-pago').checked) $('d-pgto').value = $('d-venc').value; D.atualizarParcHint(); });
+$('d-chParc').onclick = e => { const b = e.target.closest('.chip'); if (b) { $('d-parcelas').value = b.dataset.n; D.atualizarParcHint(); } };
+$('d-modoBox').onclick = e => { const b = e.target.closest('.chip'); if (b) { D.modoTotal = b.dataset.modo === 'total'; D.atualizarParcHint(); } };
+$('d-btnSalvar').onclick = D.salvar;
+$('d-mesAnt').onclick = () => { D.mes = addMes(D.mes, -1); D.renderResumo(); };
+$('d-mesProx').onclick = () => { D.mes = addMes(D.mes, 1); D.renderResumo(); };
+$('mod-desp').addEventListener('click', async e => {
+  const pg = e.target.closest('[data-pagar]'), del = e.target.closest('[data-del]');
+  const pd = e.target.closest('[data-pagardata]'), conf = e.target.closest('[data-confpg]'), anx = e.target.closest('[data-anexar]');
+  const acha = v => D.dados.find(x => x.row === +v);
+  if (anx) {
+    e.preventDefault();
+    const d = acha(anx.dataset.anexar);
+    anexarArquivo('despAnexar', [d.row, d.desc]);
+  } else if (pg) {
+    const d = acha(pg.dataset.pagar);
+    if (await chamar('despMarcarPago', d.row, d.desc, G.hoje)) toast('Marcado como pago ✓');
+  } else if (pd) {
+    const d = acha(pd.dataset.pagardata);
+    abrirDataPagto(pd, d.venc, d.row);
+  } else if (conf) {
+    const d = acha(conf.dataset.confpg);
+    const data = conf.parentElement.querySelector('input').value;
+    if (!data) return toast('Escolha a data do pagamento', true);
+    if (await chamar('despMarcarPago', d.row, d.desc, data)) toast(`Pago em ${dataBR(data)} ✓`);
+  } else if (e.target.closest('[data-cancpg]')) {
+    e.target.closest('.pdata').remove();
+  } else if (del) {
+    const d = acha(del.dataset.del);
+    if (confirm(`Excluir "${d.desc}" de ${brl(d.valor)} (${dataBR(d.venc)})? Isso apaga a linha na planilha.`)
+        && await chamar('despExcluir', d.row, d.desc)) toast('Lançamento excluído');
+  }
+});
+
+// =====================================================================
+// Contas fixas (aba CONTAS FIXAS): cadastro + lançamento das que faltam no mês
+// =====================================================================
+const F = {
+  dados: [], cat: '', pend: [],
+
+  // Ativas que ainda não têm lançamento com a mesma descrição neste mês (pelo vencimento)
+  pendentes() {
+    const mes = G.hoje.slice(0, 7);
+    return F.dados.filter(f => f.ativa && !D.dados.some(d => D.semParcela(d.desc) === f.desc && d.venc.slice(0, 7) === mes))
+      .map(f => {
+        const ult = D.porDesc[f.desc];
+        return { ...f, venc: mes + '-' + String(Math.min(f.dia, diasNoMes(mes))).padStart(2, '0'), sug: f.valor || (ult ? ult.ult.valor : 0) };
+      })
+      .sort((a, b) => a.venc.localeCompare(b.venc));
+  },
+
+  render() {
+    const pend = F.pend = F.pendentes();
+    $('d-fixTitulo').textContent = 'Contas fixas de ' + nomeMes(G.hoje.slice(0, 7));
+    $('d-bFix').textContent = pend.length; $('d-bFix').classList.toggle('hidden', !pend.length);
+    const ativas = F.dados.filter(f => f.ativa);
+    $('d-fixPend').innerHTML = pend.length ? pend.map((f, i) => `
+      <div class="item">
+        <input type="checkbox" data-i="${i}" checked>
+        <div class="grow"><div class="t">${esc(f.desc)}</div><div class="s">vence ${dataBR(f.venc)} · ${esc(f.cat)}</div></div>
+        <input type="text" class="mini" inputmode="decimal" data-v="${i}" placeholder="0,00" value="${f.sug ? f.sug.toFixed(2).replace('.', ',') : ''}">
+      </div>`).join('')
+      : `<div class="empty">${ativas.length ? 'Tudo lançado neste mês 🎉' : 'Nenhuma conta fixa cadastrada ainda. Quando vierem condomínio, luz, internet…, cadastre abaixo.'}</div>`;
+    $('d-fixAcoes').classList.toggle('hidden', !pend.length);
+    $('d-fixLista').innerHTML = ativas.length ? ativas.slice().sort((a, b) => a.dia - b.dia).map(f => `
+      <div class="item"><div class="grow"><div class="t">${esc(f.desc)}</div>
+        <div class="s">todo dia ${f.dia} · ${esc(f.cat)}${f.valor ? ' · previsto ' + brl(f.valor) : ''}</div></div>
+        <button class="sm del" data-desat="${f.row}" title="Tirar da lista">✕</button></div>`).join('')
+      : '<div class="empty">Nenhuma conta fixa</div>';
+    F.chipsCat();
+  },
+
+  chipsCat() {
+    chipsEscolha('d-fixChCat', D.categorias(), F.cat, v => { F.cat = v; F.chipsCat(); }, 'Nova categoria:');
+  },
+
+  async salvar() {
+    const it = { desc: norm($('d-fixDesc').value), cat: F.cat, dia: parseInt($('d-fixDia').value, 10), valor: parseNum($('d-fixValor').value) };
+    const falta = [!it.desc && 'descrição', !it.cat && 'categoria', !(it.dia >= 1 && it.dia <= 31) && 'dia do vencimento (1 a 31)'].filter(Boolean);
+    if (falta.length) return toast('Falta preencher: ' + falta.join(', '), true);
+    if (await chamar('fixaSalvar', it)) {
+      toast('Conta fixa cadastrada ✓');
+      $('d-fixDesc').value = ''; $('d-fixDia').value = ''; $('d-fixValor').value = ''; F.cat = ''; F.chipsCat();
+      $('d-fixNova').open = false;
+    }
+  },
+
+  async lancar() {
+    const pago = $('d-fixPago').checked;
+    const itens = [...document.querySelectorAll('#d-fixPend input[type=checkbox]:checked')].map(cb => {
+      const i = +cb.dataset.i, f = F.pend[i];
+      return { desc: f.desc, cat: f.cat, venc: f.venc, pgto: pago ? f.venc : '',
+               valor: parseNum(document.querySelector(`#d-fixPend input[data-v="${i}"]`).value) };
+    });
+    if (!itens.length) return toast('Selecione ao menos uma conta', true);
+    const semValor = itens.filter(it => !(it.valor > 0));
+    if (semValor.length) return toast('Preencha o valor de: ' + semValor.map(it => it.desc).join(', '), true);
+    if (!confirm(`Lançar ${itens.length} conta(s), total ${brl(soma(itens))}?`)) return;
+    if (await chamar('despSalvar', itens)) toast(itens.length + ' conta(s) lançada(s) ✓');
+  }
+};
+$('d-btnFixSalvar').onclick = F.salvar;
+$('d-btnFix').onclick = F.lancar;
+$('d-fixLista').addEventListener('click', async e => {
+  const b = e.target.closest('[data-desat]'); if (!b) return;
+  const f = F.dados.find(x => x.row === +b.dataset.desat);
+  if (confirm(`Tirar "${f.desc}" das contas fixas? Os lançamentos já feitos continuam.`) && await chamar('fixaDesativar', f.row, f.id)) toast('Conta fixa removida');
+});
+
+// =====================================================================
+// Módulo: Vencimentos e garantias (aba VENCIMENTOS)
+// Status calculado aqui: vencido / breve (30 dias) / em dia; garantia vencida = expirada (vai pro histórico).
+// =====================================================================
+const TIPOS_VENC = [
+  { nome: 'Garantia', rep: false, dica: 'Não se renova: avisa 30 dias antes de acabar e depois vai para o histórico.' },
+  { nome: 'Seguro', rep: true, meses: 12, dica: 'Repete todo ano (vigência da apólice).' }
+];
+const tipoVenc = nome => TIPOS_VENC.find(c => c.nome === nome)
+  || (nome ? { nome, rep: false, dica: 'Tipo criado por você. Marque "Repete" se ele se renova.' } : null);
+const V_DIAS = 30;
+
+// 'yyyy-MM-dd' + n meses, ajustando o dia ao fim do mês (igual ao servidor)
+function addMesesIso(iso, n) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const alvo = new Date(Date.UTC(y, m - 1 + n, 1));
+  const ultimo = new Date(Date.UTC(alvo.getUTCFullYear(), alvo.getUTCMonth() + 1, 0)).getUTCDate();
+  return alvo.getUTCFullYear() + '-' + String(alvo.getUTCMonth() + 1).padStart(2, '0') + '-' + String(Math.min(d, ultimo)).padStart(2, '0');
+}
+
+const V = {
+  dados: [], filtro: '', busca: '', buscaH: '',
+  f: { tipo: 'Garantia', renovar: null },
+
+  aplicar(lista) { V.dados = lista; V.render(); V.montarForm(); },
+
+  ehGarantia: x => x.tipo === 'Garantia',
+
+  status(x) {
+    const dias = x.venceData ? Math.round((new Date(x.venceData) - new Date(G.hoje)) / 864e5) : null;
+    let st;
+    if (x.situacao === 'CANCELADO') st = 'descartado';
+    else if (x.situacao !== 'ATIVO') st = 'concluido';
+    else {
+      const passou = dias !== null && dias < 0, perto = dias !== null && dias <= V_DIAS;
+      st = V.ehGarantia(x) ? (passou ? 'expirada' : perto ? 'breve' : 'emdia') : (passou ? 'vencido' : perto ? 'breve' : 'emdia');
+    }
+    return { st, dias };
+  },
+
+  prazo(x, s) {
+    if (!x.venceData) return '';
+    return s.dias < 0 ? `venceu em ${dataBR(x.venceData)}`
+      : `vence em ${dataBR(x.venceData)}` + (s.dias === 0 ? ' (hoje)' : s.dias <= 90 ? ` (em ${s.dias} dia${s.dias === 1 ? '' : 's'})` : '');
+  },
+
+  titulo: x => x.desc && norm(x.desc) !== norm(x.tipo) ? `${x.tipo} — ${x.desc}` : (x.tipo || x.desc),
+
+  confere(x, busca) {
+    if (!busca) return true;
+    const b = norm(busca);
+    return [x.tipo, x.desc, x.fornecedor, x.obs, x.id].some(v => norm(v).includes(b));
+  },
+
+  // Fixos + os criados que já aparecem na aba, por uso
+  tipos() {
+    const fixos = TIPOS_VENC.map(c => c.nome), cont = {};
+    V.dados.forEach(x => { if (x.tipo && !fixos.includes(x.tipo)) cont[x.tipo] = (cont[x.tipo] || 0) + 1; });
+    const criados = Object.keys(cont).sort((a, b) => cont[b] - cont[a] || a.localeCompare(b));
+    if (V.f.tipo && !fixos.includes(V.f.tipo) && !criados.includes(V.f.tipo)) criados.push(V.f.tipo);
+    return fixos.concat(criados);
+  },
+
+  render() {
+    const ativos = V.dados.map(x => ({ x, s: V.status(x) })).filter(o => ['vencido', 'breve', 'emdia'].includes(o.s.st));
+    const nV = ativos.filter(o => o.s.st === 'vencido').length, nB = ativos.filter(o => o.s.st === 'breve').length;
+    const nG = ativos.filter(o => o.s.st === 'breve' && V.ehGarantia(o.x)).length;
+    $('v-kVenc').textContent = nV; $('v-kBreve').textContent = nB;
+    $('v-kGar').textContent = nG ? `${nG} garantia${nG > 1 ? 's' : ''} acabando` : '';
+    $('v-bVenc').textContent = nV; $('v-bVenc').classList.toggle('hidden', !nV);
+
+    const tipos = [...new Set(ativos.map(o => o.x.tipo))].sort((a, b) => V.tipos().indexOf(a) - V.tipos().indexOf(b));
+    if (!tipos.includes(V.filtro)) V.filtro = '';
+    $('v-chFiltro').innerHTML = tipos.length > 1 ? tipos.map(n =>
+      `<button type="button" class="chip${n === V.filtro ? ' on' : ''}" data-v="${esc(n)}">${esc(n)} <b>${ativos.filter(o => o.x.tipo === n).length}</b></button>`).join('') : '';
+    const vis = ativos.filter(o => (!V.filtro || o.x.tipo === V.filtro) && V.confere(o.x, V.busca));
+    const ordem = (a, b) => (a.s.dias === null ? 1e6 : a.s.dias) - (b.s.dias === null ? 1e6 : b.s.dias);
+    const grupo = (st, tit) => {
+      const g = vis.filter(o => o.s.st === st).sort(ordem);
+      return g.length ? `<h3 style="margin-top:14px">${tit} (${g.length})</h3>` + g.map(V.itemHtml).join('') : '';
+    };
+    const html = grupo('vencido', '⚠️ Vencidos') + grupo('breve', '⏳ Vencem em breve') + grupo('emdia', '✅ Em dia');
+    $('v-lista').innerHTML = html || `<div class="empty">${V.dados.length ? 'Nada encontrado' : 'Nenhum vencimento cadastrado. Comece pelas garantias dos móveis e eletros.'}</div>`;
+    V.renderHist();
+  },
+
+  itemHtml({ x, s }) {
+    const cor = s.st === 'vencido' ? 'var(--danger)' : s.st === 'breve' ? 'var(--warn)' : 'var(--muted)';
+    const extra = [x.fornecedor, x.repMeses ? `repete a cada ${x.repMeses} ${x.repMeses == 1 ? 'mês' : 'meses'}` : ''].filter(Boolean).map(esc).join(' · ');
+    return `<div class="item vi" data-row="${x.row}">
+      <div class="grow">
+        <div class="t">${esc(V.titulo(x))}</div>
+        <div class="s" style="color:${cor};font-weight:${s.st === 'emdia' ? 400 : 600}">${esc(V.prazo(x, s))}${V.ehGarantia(x) && s.st === 'breve' ? ' · teste antes que acabe' : ''}</div>
+        <div class="s">${extra}${linksAnexo(x.anexo)}${linkAnexar(x.row)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${x.repMeses ? `<button class="sm ok" data-renovar="${x.row}">↻ Renovar</button>` : ''}
+        <button class="sm${x.repMeses ? '' : ' ok'}" data-concluir="${x.row}">✓ Concluir</button>
+      </div>
+    </div>`;
+  },
+
+  renderHist() {
+    const h = V.dados.map(x => ({ x, s: V.status(x) })).filter(o => ['concluido', 'descartado', 'expirada'].includes(o.s.st) && V.confere(o.x, V.buscaH))
+      .sort((a, b) => (b.x.concluido || b.x.venceData || '').localeCompare(a.x.concluido || a.x.venceData || ''));
+    const rot = { concluido: 'concluído', descartado: 'descartado', expirada: 'garantia expirada' };
+    $('v-hist').innerHTML = h.length ? h.map(({ x, s }) => `<div class="item" data-row="${x.row}">
+      <div class="grow">
+        <div class="t">${esc(V.titulo(x))}</div>
+        <div class="s">${rot[s.st]}${x.concluido ? ' em ' + dataBR(x.concluido) : s.st === 'expirada' ? ' em ' + dataBR(x.venceData) : ''}${x.iniData ? ' · início ' + dataBR(x.iniData) : ''}</div>
+        <div class="s">${[x.fornecedor, x.obs, x.anterior ? 'substituiu ' + x.anterior : '', x.id].filter(Boolean).map(esc).join(' · ')}${linksAnexo(x.anexo)}</div>
+      </div>
+      ${s.st === 'expirada' ? '' : `<button class="sm" data-reabrir="${x.row}" title="Voltar para ativo">↩</button>`}
+    </div>`).join('') : '<div class="empty">Nada no histórico</div>';
+  },
+
+  // ---------- Formulário (novo / renovar) ----------
+  montarForm() {
+    chipsEscolha('v-chTipo', V.tipos(), V.f.tipo, v => {
+      // Tipo novo vem em maiúsculas do "+ nova": guarda só com a 1ª letra maiúscula (ex.: "Iptu")
+      V.f.tipo = v ? V.tipos().find(c => semAcento(c) === semAcento(v)) || v.charAt(0) + v.slice(1).toLowerCase() : '';
+      V.aplicarRegra(); V.montarForm(); V.recalcular();
+    }, 'Novo tipo de vencimento (ex.: IPTU, Extintor, Dedetização):');
+    $('v-regraHint').textContent = V.f.tipo && tipoVenc(V.f.tipo) ? tipoVenc(V.f.tipo).dica : '';
+    $('v-repBox').classList.toggle('hidden', !$('v-repete').checked);
+    $('v-dlForn').innerHTML = [...new Set(V.dados.map(x => x.fornecedor).filter(Boolean))].map(f => `<option value="${esc(f)}">`).join('');
+  },
+
+  aplicarRegra() {
+    const c = tipoVenc(V.f.tipo);
+    if (!c || V.f.renovar) return;
+    const ult = V.dados.filter(x => x.tipo === c.nome && x.repMeses).sort((a, b) => (b.iniData || '').localeCompare(a.iniData || ''))[0];
+    $('v-repete').checked = c.rep || !!ult;
+    if (!$('v-repMeses').value) $('v-repMeses').value = (ult && ult.repMeses) || c.meses || '';
+  },
+
+  // Vencimento sugerido = início + intervalo (só preenche se não foi digitado à mão)
+  recalcular() {
+    const ini = $('v-iniData').value, m = parseInt($('v-repMeses').value, 10);
+    if ($('v-repete').checked && ini && m > 0 && !$('v-venceData').dataset.editado) $('v-venceData').value = addMesesIso(ini, m);
+  },
+
+  limparForm() {
+    V.f = { tipo: 'Garantia', renovar: null };
+    ['v-desc', 'v-forn', 'v-venceData', 'v-repMeses', 'v-anexo'].forEach(id => { $(id).value = ''; delete $(id).dataset.editado; });
+    $('v-iniData').value = G.hoje; $('v-repete').checked = false;
+    document.querySelectorAll('#v-chPrazo .chip').forEach(c => c.classList.remove('on'));
+    $('v-renovInfo').classList.add('hidden'); $('v-btnCancRenov').classList.add('hidden');
+    $('v-btnSalvar').textContent = 'Salvar';
+    V.montarForm();
+  },
+
+  abaNovo() { document.querySelector('nav.sub[data-mod=venc] button[data-tab=novo]').click(); },
+  abaLista() { document.querySelector('nav.sub[data-mod=venc] button[data-tab=lista]').click(); },
+
+  // Atalho a partir de uma despesa (móvel/eletro): abre o formulário de garantia já preenchido
+  novaGarantia(desc, data) {
+    V.limparForm();
+    $('v-desc').value = desc.charAt(0) + desc.slice(1).toLowerCase();
+    $('v-iniData').value = data || G.hoje;
+    trocarModulo('venc'); V.abaNovo();
+  },
+
+  iniciarRenovar(x) {
+    V.limparForm();
+    V.f = { tipo: x.tipo, renovar: { row: x.row, id: x.id } };
+    $('v-desc').value = x.desc; $('v-forn').value = x.fornecedor;
+    $('v-iniData').value = G.hoje;
+    $('v-repete').checked = true; $('v-repMeses').value = x.repMeses || '';
+    V.recalcular();
+    $('v-renovInfo').innerHTML = `↻ Renovando <b>${esc(V.titulo(x))}</b> (${esc(x.id)}).<br>O atual será marcado como concluído na data de início abaixo. Confira as datas.`;
+    $('v-renovInfo').classList.remove('hidden'); $('v-btnCancRenov').classList.remove('hidden');
+    $('v-btnSalvar').textContent = 'Salvar renovação';
+    V.montarForm();
+    V.abaNovo();
+  },
+
+  async salvar() {
+    const it = {
+      tipo: V.f.tipo, desc: $('v-desc').value.trim(), fornecedor: $('v-forn').value.trim(),
+      iniData: $('v-iniData').value, venceData: $('v-venceData').value,
+      repMeses: $('v-repete').checked ? parseInt($('v-repMeses').value, 10) || '' : '',
+      renovar: V.f.renovar
+    };
+    const falta = [!it.tipo && 'tipo', !it.venceData && 'quando vence'].filter(Boolean);
+    if (falta.length) return toast('Falta preencher: ' + falta.join(', '), true);
+    if (it.iniData && it.venceData < it.iniData) return toast('O vencimento está antes do início.', true);
+    if ($('v-repete').checked && !it.repMeses) return toast('Informe de quantos em quantos meses repete.', true);
+    try { it.anexo = await lerArquivo($('v-anexo').files[0]); } catch (e) { return toast(e.message, true); }
+    const renov = !!it.renovar;
+    if (await chamar('vencSalvar', it)) {
+      toast(renov ? 'Renovado ✓' : 'Vencimento salvo ✓');
+      V.limparForm(); V.abaLista();
+    }
+  },
+
+  // Painel de conclusão logo abaixo do item: data, observação, confirmar / descartar
+  abrirConcluir(btn, x) {
+    const item = btn.closest('.item');
+    const aberto = item.nextElementSibling && item.nextElementSibling.classList.contains('pdata');
+    document.querySelectorAll('#mod-venc .pdata').forEach(p => p.remove());
+    if (aberto) return;
+    item.insertAdjacentHTML('afterend', `<div class="pdata" style="flex-direction:column;align-items:stretch">
+      <div style="display:flex;gap:8px;align-items:center">Concluído em <input type="date" value="${G.hoje}" max="${G.hoje}"></div>
+      <input type="text" placeholder="Observação (opcional)" style="padding:7px 10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="sm ok" data-confconc="${x.row}">Confirmar</button>
+        <button class="sm del" data-descartar="${x.row}">Descartar item</button>
+        <button class="sm" data-cancconc="1">Cancelar</button>
+      </div>
+      ${x.repMeses ? '<div class="hint" style="margin:0">Para já criar o próximo, use ↻ Renovar.</div>' : ''}
+    </div>`);
+  }
+};
+
+$('v-busca').addEventListener('input', e => { V.busca = e.target.value; V.render(); });
+$('v-buscaH').addEventListener('input', e => { V.buscaH = e.target.value; V.renderHist(); });
+$('v-chFiltro').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; V.filtro = V.filtro === b.dataset.v ? '' : b.dataset.v; V.render(); };
+$('v-chPrazo').onclick = e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const m = +b.dataset.m, ini = $('v-iniData').value || G.hoje;
+  $('v-venceData').value = addMesesIso(ini, m); $('v-venceData').dataset.editado = '1';
+  document.querySelectorAll('#v-chPrazo .chip').forEach(c => c.classList.toggle('on', c === b));
+  if ($('v-repete').checked) $('v-repMeses').value = m;
+};
+$('v-repete').addEventListener('change', () => { V.montarForm(); V.recalcular(); });
+['v-iniData', 'v-repMeses'].forEach(id => $(id).addEventListener('input', V.recalcular));
+$('v-venceData').addEventListener('input', () => {
+  if ($('v-venceData').value) $('v-venceData').dataset.editado = '1'; else delete $('v-venceData').dataset.editado;
+});
+$('v-btnSalvar').onclick = () => V.salvar();
+$('v-btnCancRenov').onclick = () => { V.limparForm(); V.abaLista(); };
+
+$('v-lista').addEventListener('click', async e => {
+  const achar = el => V.dados.find(x => x.row === +el);
+  const anx = e.target.closest('[data-anexar]');
+  if (anx) { e.preventDefault(); const x = achar(anx.dataset.anexar); return anexarArquivo('vencAnexar', [x.row, x.id]); }
+  const ren = e.target.closest('[data-renovar]'), con = e.target.closest('[data-concluir]');
+  const ok = e.target.closest('[data-confconc]'), des = e.target.closest('[data-descartar]');
+  if (ren) V.iniciarRenovar(achar(ren.dataset.renovar));
+  else if (con) V.abrirConcluir(con, achar(con.dataset.concluir));
+  else if (ok || des) {
+    const x = achar((ok || des).dataset.confconc || (ok || des).dataset.descartar);
+    const p = (ok || des).closest('.pdata'), data = p.querySelector('input[type=date]').value, obs = p.querySelector('input[type=text]').value;
+    if (des && !confirm(`Descartar "${V.titulo(x)}"? Ele sai da lista sem ser concluído (fica no histórico).`)) return;
+    if (await chamar('vencConcluir', x.row, x.id, data, obs, !!des)) toast(des ? 'Descartado' : 'Concluído ✓');
+  } else if (e.target.closest('[data-cancconc]')) e.target.closest('.pdata').remove();
+});
+$('v-hist').addEventListener('click', async e => {
+  const b = e.target.closest('[data-reabrir]'); if (!b) return;
+  const x = V.dados.find(v => v.row === +b.dataset.reabrir);
+  if (confirm(`Voltar "${V.titulo(x)}" para a lista de ativos?`) && await chamar('vencReabrir', x.row, x.id)) toast('Reaberto');
+});
+
+// =====================================================================
+// Início
+// =====================================================================
+(async () => {
+  carregando(true);
+  try {
+    const res = await api('getTudo');
+    aplicar(res);
+    $('d-venc').value = G.hoje; $('d-pgto').value = G.hoje; D.atualizarPago();
+    V.limparForm();
+    let salvo = ''; try { salvo = localStorage.getItem('apto-modulo') || ''; } catch (e) {}
+    trocarModulo(salvo);
+  } catch (e) { toast('Não foi possível carregar: ' + e.message, true); }
+  finally { carregando(false); }
+})();
+
+// =====================================================================
+// Dados de exemplo (usados só fora do Google, para pré-visualização)
+// =====================================================================
+const MOCK = (() => {
+  const hoje = new Date(), pad = n => String(n).padStart(2, '0');
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const dias = n => { const d = new Date(hoje); d.setDate(d.getDate() - n); return iso(d); };
+  const today = iso(hoje);
+  let r = 2;
+
+  // Despesas da montagem do apartamento (algumas parceladas)
+  let desp = [];
+  const lanc = (desc, cat, valor, venc, pago, usuario) => desp.push({ row: r++, venc, pgto: pago ? venc : '', cat, valor, desc, anexo: '', usuario: usuario || 'BRUNO' });
+  const parc = (desc, cat, total, n, ini) => {
+    for (let p = 0; p < n; p++) {
+      const venc = addMes(ini.slice(0, 7), p) + ini.slice(7);
+      lanc(`${desc} (${p + 1}/${n})`, cat, Math.round(total / n * 100) / 100, venc, venc <= today);
+    }
+  };
+  parc('SOFÁ 3 LUGARES', 'MÓVEIS E DECORAÇÃO', 4200, 10, dias(120));
+  parc('GELADEIRA', 'ELETRO', 3600, 6, dias(75));
+  parc('CAMA BOX CASAL', 'MÓVEIS E DECORAÇÃO', 2900, 5, dias(40));
+  lanc('MICRO-ONDAS', 'ELETRO', 699, dias(60), true);
+  lanc('JOGO DE PANELAS', 'UTILIDADES', 489.9, dias(55), true, 'PESSOA 2');
+  lanc('CORTINAS SALA', 'MÓVEIS E DECORAÇÃO', 780, dias(30), true, 'PESSOA 2');
+  lanc('ROUPA DE CAMA', 'UTILIDADES', 359, dias(20), true);
+  lanc('LUMINÁRIAS', 'MÓVEIS E DECORAÇÃO', 420, dias(12), true);
+  lanc('FRETE DA GELADEIRA', 'OUTROS', 120, dias(75), true);
+  lanc('MÁQUINA DE LAVAR', 'ELETRO', 2399, dias(-6), false);
+
+  let fixas = [];
+
+  const vd = n => { const d = new Date(hoje); d.setDate(d.getDate() + n); return iso(d); };
+  let vId = 0;
+  const vn = (tipo, desc, ini, venceData, repMeses, extra) => ({ row: r++, id: 'V' + String(++vId).padStart(4, '0'),
+    tipo, desc, fornecedor: '', iniData: ini, venceData, repMeses, anexo: '', situacao: 'ATIVO',
+    concluido: '', obs: '', anterior: '', usuario: 'BRUNO', ...(extra || {}) });
+  let venc = [
+    vn('Garantia', 'Geladeira', dias(75), vd(290), '', { fornecedor: 'MAGAZINE', anexo: 'https://drive.google.com/file/d/nota' }),
+    vn('Garantia', 'Micro-ondas', dias(60), vd(20), ''),
+    vn('Garantia', 'Sofá 3 lugares', dias(120), vd(245), '')
+  ];
+
+  return {
+    getTudo: () => ({ usuario: { nome: 'BRUNO' }, hoje: today, desp, fixas, venc }),
+    despSalvar: itens => {
+      itens.forEach(it => {
+        const n = it.parcelas || 1, c = Math.round(it.valor * 100), b = it.valorTotal ? Math.floor(c / n) : c;
+        for (let p = 0; p < n; p++) desp.push({ row: r++, venc: addMes(it.venc.slice(0, 7), p) + it.venc.slice(7), pgto: p ? '' : it.pgto, cat: it.cat,
+          valor: (it.valorTotal && p === n - 1 ? c - b * (n - 1) : b) / 100, desc: n > 1 ? `${it.desc} (${p + 1}/${n})` : it.desc,
+          anexo: (it.anexos || []).map(a => 'https://drive.google.com/file/d/' + a.name).join(', '), usuario: 'BRUNO' });
+      });
+      return { desp };
+    },
+    despMarcarPago: (row, desc, data) => { desp.find(x => x.row === row).pgto = data; return { desp }; },
+    despExcluir: row => { desp = desp.filter(x => x.row !== row); return { desp }; },
+    despAnexar: (row, desc, a) => { const d = desp.find(x => x.row === row); d.anexo = [d.anexo, 'https://drive.google.com/file/d/' + a.name].filter(Boolean).join(', '); return { desp }; },
+    fixaSalvar: it => {
+      if (fixas.some(f => f.ativa && f.desc === it.desc)) throw new Error('Já existe a conta fixa ' + it.desc + '.');
+      fixas.push({ row: r++, id: 'F' + String(fixas.length + 1).padStart(4, '0'), desc: it.desc, cat: it.cat, dia: it.dia, valor: it.valor || 0, ativa: true });
+      return { fixas };
+    },
+    fixaDesativar: row => { fixas.find(f => f.row === row).ativa = false; return { fixas }; },
+    vencSalvar: it => {
+      const novo = vn(it.tipo, it.desc, it.iniData, it.venceData, it.repMeses,
+        { fornecedor: norm(it.fornecedor), anexo: it.anexo ? 'https://drive.google.com/file/d/' + it.anexo.name : '' });
+      if (it.renovar) { const a = venc.find(x => x.row === it.renovar.row); a.situacao = 'CONCLUIDO'; a.concluido = it.iniData || today; a.obs = 'Renovado: ' + novo.id; novo.anterior = a.id; }
+      venc.push(novo); return { venc };
+    },
+    vencConcluir: (row, id, data, obs, cancelar) => { const x = venc.find(v => v.row === row); x.situacao = cancelar ? 'CANCELADO' : 'CONCLUIDO'; x.concluido = data; if (obs) x.obs = obs; return { venc }; },
+    vencReabrir: row => { const x = venc.find(v => v.row === row); x.situacao = 'ATIVO'; x.concluido = ''; return { venc }; },
+    vencAnexar: (row, id, a) => { const x = venc.find(v => v.row === row); x.anexo = [x.anexo, 'https://drive.google.com/file/d/' + a.name].filter(Boolean).join(', '); return { venc }; }
+  };
+})();
+</script>
+</body>
+</html>
