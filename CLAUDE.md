@@ -21,6 +21,7 @@ Apps Script e link próprios. Este app **nunca** lê nem grava nas planilhas do 
 - Projeto do Apps Script **da planilha do apartamento** (Extensões → Apps Script), arquivos `Código.gs` e `Index`.
 - App da Web: *Executar como: Eu* · *Quem pode acessar: Qualquer pessoa*. Acesso por link pessoal `?k=CHAVE`.
 - Usuários: o Bruno e mais uma pessoa, cada um com seu link (aba `APP_ACESSOS`).
+- Código: GitHub `brunohenrique888/app-apartamento` (privado), branch `main`. Separado do repositório do app dos pais.
 
 ## Publicar uma alteração (instruções para o Bruno)
 1. Colar `Code.gs` em `Código.gs` e/ou `Index.html` em `Index`; salvar (Ctrl+S).
