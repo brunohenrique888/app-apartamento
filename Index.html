@@ -69,8 +69,6 @@
   .kpi .d { font-size: 12px; } .up { color: var(--warn); } .down { color: #1f7a4a; }
   .bar { margin: 8px 0; } .bar .lbl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px; gap: 8px; }
   .bar .trk { height: 8px; background: var(--pri-soft); border-radius: 4px; overflow: hidden; } .bar .fill { height: 100%; background: var(--pri); border-radius: 4px; }
-  .mes { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .mes b { font-size: 17px; }
   h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
   .empty { color: var(--muted); text-align: center; padding: 16px 0; }
   #toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(200px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 10px; transition: transform .25s; z-index: 20; max-width: 90vw; }
@@ -101,6 +99,35 @@
   .cols-x { display: flex; gap: 2px; font-size: 10px; color: var(--muted); margin-top: 4px; }
   .cols-x span { flex: 1; text-align: center; white-space: nowrap; overflow: visible; }
   .filtros { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 4px; font-size: 13px; }
+  /* Resumo: tabelão com cabeçalho e 1ª coluna fixos */
+  .per [id$=resFil] label.f:first-child { margin-top: 0; }
+  .per [id$=resFil] + div label.f { margin-top: 14px; }
+  .tbl { max-height: 70vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; -webkit-overflow-scrolling: touch; }
+  .tg { border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; min-width: 100%; }
+  .tg th { position: sticky; top: 0; z-index: 2; background: var(--pri-soft); font-size: 11.5px; font-weight: 600; text-align: left; padding: 8px; white-space: nowrap; cursor: pointer; user-select: none; }
+  .tg th.on { color: var(--pri); }
+  .tg td { padding: 7px 8px; border-top: 1px solid var(--line); white-space: nowrap; vertical-align: top; background: var(--card); }
+  .tg tbody tr:nth-child(even) td { background: #f8f9f9; }
+  .tg .n { text-align: right; }
+  .tg td.desc { white-space: normal; min-width: 160px; max-width: 260px; }
+  .tg th:first-child, .tg td:first-child { position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--line); }
+  .tg th:first-child { z-index: 3; }
+  .tg tfoot td { position: sticky; bottom: 0; font-weight: 700; background: var(--bg) !important; border-top: 2px solid var(--line); }
+  .tg tfoot td:first-child { z-index: 2; }
+  .tg a.ver { font-size: 15px; }
+  /* Visor de anexos (foto ou PDF) dentro do app */
+  a.ver { color: var(--pri); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  a.anexar { color: var(--muted); text-decoration: none; white-space: nowrap; }
+  #visor { position: fixed; inset: 0; z-index: 30; background: #1b1f20; display: flex; flex-direction: column; }
+  #visor .vt { display: flex; align-items: center; gap: 6px; padding: 10px 10px; color: #fff; font-size: 14px; }
+  #visor .vt .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #visor .vt button, #visor .vt a { flex: none; background: rgba(255,255,255,.16); color: #fff; border: 0; border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; }
+  #visor .vt button:disabled { opacity: .35; }
+  #visor .vc { flex: 1; overflow: auto; padding: 0 8px 16px; -webkit-overflow-scrolling: touch; }
+  #visor .vc img, #visor .vc canvas { display: block; margin: 0 auto 10px; background: #fff; width: calc(var(--z, 1) * 100%); max-width: none; height: auto; }
+  #visor .vc img { max-width: calc(var(--z, 1) * 900px); }
+  #visor .msg { color: #fff; text-align: center; padding: 40px 16px; line-height: 1.6; }
+  #visor .msg a { color: #fff; }
 </style>
 </head>
 <body data-k="<?= chave ?>" data-mod="desp">
@@ -214,17 +241,12 @@
   </section>
 
   <section id="d-tab-resumo" class="hidden">
-    <div class="mes">
-      <button class="sm" id="d-mesAnt">‹ Anterior</button>
-      <b id="d-mesNome"></b>
-      <button class="sm" id="d-mesProx">Próximo ›</button>
+    <div class="card per"><div id="d-resFil"></div><div id="d-resPer"></div></div>
+    <div class="card">
+      <input type="text" id="d-resBusca" placeholder="Filtrar: descrição, categoria, valor…" autocomplete="off">
+      <div class="hint" style="margin:6px 0 10px">Só o que foi pago, pela data de pagamento. Toque no título da coluna para ordenar e em 👁 para ver o anexo.</div>
+      <div id="d-resTab"></div>
     </div>
-    <div class="kpis">
-      <div class="kpi"><div class="l">Pago no mês</div><div class="n" id="d-resTotal">—</div><div class="d" id="d-resDelta"></div></div>
-      <div class="kpi"><div class="l">Lançamentos</div><div class="n" id="d-resQtd">—</div><div class="d" id="d-resMedia"></div></div>
-    </div>
-    <div class="card"><h3>Por categoria</h3><div id="d-resCat"></div></div>
-    <div class="card"><h3>Lançamentos do mês</h3><div id="d-resLista"></div></div>
   </section>
 
   <section id="d-tab-rel" class="hidden">
@@ -327,6 +349,18 @@
 
 <div id="loading">Carregando…</div>
 <div id="toast"></div>
+<div id="visor" class="hidden" role="dialog" aria-label="Anexo">
+  <div class="vt">
+    <button type="button" id="vs-ant" aria-label="Anexo anterior">‹</button>
+    <span class="nm" id="vs-nome"></span>
+    <button type="button" id="vs-prox" aria-label="Próximo anexo">›</button>
+    <button type="button" id="vs-menos" aria-label="Diminuir">−</button>
+    <button type="button" id="vs-mais" aria-label="Aumentar">+</button>
+    <a id="vs-drive" href="#" target="_blank" rel="noopener">Drive</a>
+    <button type="button" id="vs-fechar" aria-label="Fechar">✕</button>
+  </div>
+  <div class="vc" id="vs-corpo"></div>
+</div>
 
 <script>
 // =====================================================================
@@ -497,6 +531,46 @@ function filtroPeriodo(el, st, inicio, render) {
   };
 }
 
+// =====================================================================
+// Resumo em tabelão: escolhe a categoria e o período; tabela com ordenação, totais e 👁 dos anexos
+// =====================================================================
+// st = { de, ate, alvo, busca, ord, desc } do módulo. alvos = categorias com lançamento pago.
+function resumoFiltros(p, st, rotulo, alvos, inicio, render) {
+  if (!st.de) { st.de = G.hoje.slice(0, 4) + '-01-01'; st.ate = G.hoje; }
+  if (st.alvo && !alvos.includes(st.alvo)) st.alvo = '';
+  $(p + '-resFil').innerHTML = alvos.length > 1 ? `<label class="f">${rotulo}</label><div class="chips">` + ['', ...alvos].map(c =>
+    `<button type="button" class="chip${c === st.alvo ? ' on' : ''}" data-alvo="${esc(c)}">${c ? esc(c) : 'Todas'}</button>`).join('') + '</div>' : '';
+  $(p + '-resFil').onclick = e => { const b = e.target.closest('[data-alvo]'); if (b) { st.alvo = b.dataset.alvo; render(); } };
+  filtroPeriodo(p + '-resPer', st, inicio, render);
+}
+
+const dataCurta = iso => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(2, 4)}` : '';
+const plural = (n, um, varios) => n + ' ' + (n === 1 ? um : varios);
+function celAnexo(txt) {
+  const u = urlsAnexo(txt);
+  return u.length ? `<a href="#" class="ver" data-ver="${esc(u.join(' '))}" data-i="0" title="Ver anexo">👁${u.length > 1 ? ' ' + u.length : ''}</a>` : '';
+}
+const COL_ANEXO = { k: 'anexo', t: '📎', v: r => urlsAnexo(r.anexo).length, h: r => celAnexo(r.anexo) };
+
+// cols = [{ k, t: título, v: r => valor (ordena e, sem h, é o texto), h: r => html, num: número à direita, cls, tot: l => rodapé }]
+function tabelao(el, l, cols, st, render, vazio) {
+  if (!l.length) { $(el).innerHTML = `<div class="empty">${vazio}</div>`; $(el).onclick = null; return; }
+  const c = cols.find(x => x.k === st.ord) || cols[0];
+  const cmp = (x, y) => { const a = c.v(x), b = c.v(y); return typeof a === 'number' || typeof b === 'number' ? (a || 0) - (b || 0) : String(a || '').localeCompare(String(b || '')); };
+  const ord = l.slice().sort((x, y) => (st.desc ? -cmp(x, y) : cmp(x, y)) || y.row - x.row);
+  const cl = k => [k.num ? 'n' : '', k.cls || ''].join(' ').trim();
+  $(el).innerHTML = `<div class="tbl"><table class="tg"><thead><tr>${cols.map(k =>
+      `<th data-ord="${k.k}" class="${[k.num ? 'n' : '', k === c ? 'on' : ''].join(' ').trim()}">${k.t}${k === c ? (st.desc ? ' ▾' : ' ▴') : ''}</th>`).join('')}</tr></thead>
+    <tbody>${ord.map(r => `<tr>${cols.map(k => `<td class="${cl(k)}">${k.h ? k.h(r) : esc(k.v(r))}</td>`).join('')}</tr>`).join('')}</tbody>
+    <tfoot><tr>${cols.map(k => `<td class="${cl(k)}">${k.tot ? k.tot(l) : ''}</td>`).join('')}</tr></tfoot></table></div>`;
+  $(el).onclick = e => {
+    const th = e.target.closest('[data-ord]'); if (!th) return;
+    const k = cols.find(x => x.k === th.dataset.ord);
+    if (st.ord === k.k) st.desc = !st.desc; else { st.ord = k.k; st.desc = !!(k.num || k.data); }
+    render();
+  };
+}
+
 // Soma por mês (ou por ano, se o período passar de 3 anos)
 function serieMensal(l, campo, de, ate) {
   const ms = mesesEntre(de, ate), anual = ms.length > 36;
@@ -602,14 +676,118 @@ document.querySelectorAll('nav.sub').forEach(nav => nav.addEventListener('click'
 }));
 
 // Célula de anexo pode ter vários links (separados por vírgula, espaço, ; ou linha): um link para cada, sem repetir
+// "👁 ver" abre o arquivo dentro do app (visor abaixo), com setas para os outros anexos do mesmo lançamento
+const urlsAnexo = txt => [...new Set(String(txt || '').match(/https?:\/\/[^\s,;]+/g) || [])];
 function linksAnexo(txt, rotulo) {
-  const urls = [...new Set(String(txt || '').match(/https?:\/\/[^\s,;]+/g) || [])];
+  const urls = urlsAnexo(txt), lista = esc(urls.join(' '));
   rotulo = rotulo || 'anexo';
-  return urls.map((u, i) => ` · <a href="${esc(u)}" target="_blank">${rotulo}${urls.length > 1 ? ' ' + (i + 1) : ''}</a>`).join('');
+  return urls.map((u, i) => ` · <a href="#" class="ver" data-ver="${lista}" data-i="${i}">👁 ver ${rotulo}${urls.length > 1 ? ' ' + (i + 1) : ''}</a>`).join('');
 }
 
-// Link "📎 anexar" para incluir mais um arquivo num lançamento já gravado
-const linkAnexar = row => ` · <a href="#" class="anexar" data-anexar="${row}">📎 anexar</a>`;
+// Link para incluir mais um arquivo num lançamento já gravado (o link entra junto com os que já existem)
+const linkAnexar = row => ` · <a href="#" class="anexar" data-anexar="${row}">＋ incluir anexo</a>`;
+
+// ---------- Visor de anexos ----------
+// O servidor (anexoVer) lê o arquivo no Drive e manda para a tela: foto vira imagem, PDF é desenhado com o pdf.js.
+// Assim abre no celular e também para quem não tem acesso ao Drive do dono.
+const VS = { urls: [], i: 0, z: 1, cache: {}, vez: 0 };
+// Endereço montado em partes (barra-barra dentro de texto trava o app publicado)
+const PDFJS = 'https:' + '/' + '/cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsP = null;
+function carregarPdfJs() {
+  if (!pdfjsP) pdfjsP = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+    s.onerror = () => { pdfjsP = null; fail(new Error('Não foi possível carregar o leitor de PDF (sem internet?).')); };
+    document.head.appendChild(s);
+  });
+  return pdfjsP;
+}
+
+function abrirVisor(urls, i) {
+  VS.urls = urls; VS.i = i || 0; VS.z = 1;
+  $('visor').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  mostrarAnexo();
+}
+function fecharVisor() {
+  VS.vez++;
+  $('visor').classList.add('hidden');
+  $('vs-corpo').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+async function mostrarAnexo() {
+  const vez = ++VS.vez, url = VS.urls[VS.i], corpo = $('vs-corpo'), n = VS.urls.length;
+  const mod = { desp: 'd', venc: 'v' }[G.mod];
+  $('vs-ant').disabled = VS.i === 0; $('vs-prox').disabled = VS.i >= n - 1;
+  $('vs-ant').classList.toggle('hidden', n < 2); $('vs-prox').classList.toggle('hidden', n < 2);
+  $('vs-nome').textContent = (n > 1 ? `${VS.i + 1}/${n} · ` : '') + 'carregando…';
+  $('vs-drive').href = url;
+  corpo.style.setProperty('--z', VS.z);
+  corpo.innerHTML = '<div class="msg">Carregando anexo…</div>';
+  let f;
+  try { f = VS.cache[url] || (VS.cache[url] = await api('anexoVer', mod, url)); }
+  catch (e) {
+    if (vez !== VS.vez) return;
+    $('vs-nome').textContent = 'Anexo';
+    corpo.innerHTML = `<div class="msg">${esc(e.message || 'Não foi possível abrir o anexo.')}<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir no Drive</a></div>`;
+    return;
+  }
+  if (vez !== VS.vez) return;
+  $('vs-nome').textContent = (n > 1 ? `${VS.i + 1}/${n} · ` : '') + f.nome;
+  if (f.url) $('vs-drive').href = f.url;
+  const semVer = txt => corpo.innerHTML = `<div class="msg">${txt}<br><a href="${esc(f.url || url)}" target="_blank" rel="noopener">Abrir no Drive</a></div>`;
+  if (f.grande) return semVer(`Arquivo grande demais para abrir aqui (${f.grande} MB).`);
+  if (String(f.mime || '').indexOf('image') === 0) {
+    const img = new Image();
+    img.alt = f.nome;
+    img.onerror = () => { if (vez === VS.vez) semVer('Este formato de imagem não abre no navegador.'); };
+    img.src = 'data:' + f.mime + ';base64,' + f.data;
+    corpo.innerHTML = ''; corpo.appendChild(img);
+    return;
+  }
+  if (f.mime !== 'application/pdf') return semVer('Tipo de arquivo que não dá para mostrar aqui (' + esc(f.mime) + ').');
+  try {
+    const lib = await carregarPdfJs();
+    const bytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
+    const doc = await lib.getDocument({ data: bytes }).promise;
+    if (vez !== VS.vez) return;
+    corpo.innerHTML = '';
+    // Desenha com folga de resolução para o zoom (+) continuar nítido
+    const alvo = Math.min(2400, (corpo.clientWidth - 16) * Math.min(window.devicePixelRatio || 1, 2) * 1.6);
+    for (let p = 1; p <= doc.numPages; p++) {
+      const pg = await doc.getPage(p);
+      if (vez !== VS.vez) return;
+      const vp = pg.getViewport({ scale: alvo / pg.getViewport({ scale: 1 }).width });
+      const cv = document.createElement('canvas');
+      cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+      corpo.appendChild(cv);
+      await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) {
+    if (vez === VS.vez) semVer('Não foi possível mostrar o PDF. ' + esc(e.message || ''));
+  }
+}
+
+$('vs-fechar').onclick = fecharVisor;
+$('vs-ant').onclick = () => { if (VS.i > 0) { VS.i--; mostrarAnexo(); } };
+$('vs-prox').onclick = () => { if (VS.i < VS.urls.length - 1) { VS.i++; mostrarAnexo(); } };
+const ZOOMS = [1, 1.5, 2, 3];
+function zoomVisor(d) {
+  VS.z = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(VS.z) + d))];
+  $('vs-corpo').style.setProperty('--z', VS.z);
+}
+$('vs-mais').onclick = () => zoomVisor(1);
+$('vs-menos').onclick = () => zoomVisor(-1);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('visor').classList.contains('hidden')) fecharVisor(); });
+// Captura: o "👁 ver" de qualquer lista abre o visor antes de outros cliques da lista
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-ver]'); if (!a) return;
+  e.preventDefault(); e.stopPropagation();
+  abrirVisor(a.dataset.ver.split(' ').filter(Boolean), +a.dataset.i || 0);
+}, true);
 
 // Abre o seletor de arquivo; ao escolher, lê e envia ao servidor (fn = função do Code.gs, args antes do anexo)
 function anexarArquivo(fn, args) {
@@ -628,12 +806,12 @@ function anexarArquivo(fn, args) {
 // Módulo: Despesas
 // =====================================================================
 const D = {
-  dados: [], cat: '', mes: '', ultimoDesc: null, modoTotal: false, porDesc: {}, relSujo: false,
+  dados: [], cat: '', ultimoDesc: null, modoTotal: false, porDesc: {}, relSujo: false,
   rel: { de: '', ate: '', sit: 'pago', ord: 'data', busca: '', fCat: '', lim: 100 },
+  res: { de: '', ate: '', alvo: '', busca: '', ord: 'pgto', desc: true },
 
   aplicar(lanc) {
     D.dados = lanc;
-    if (!D.mes) D.mes = G.hoje.slice(0, 7);
     D.coresCat = coresFixas(agrupar(lanc.filter(d => d.pgto), D.chCat));
     D.montarListas(); D.renderUltimos(); D.renderAPagar(); D.renderResumo(); relAtualizar();
   },
@@ -771,22 +949,25 @@ const D = {
       : '<div class="empty">Nenhuma conta em aberto</div>';
   },
 
+  // ---------- Resumo (tabelão): categoria + período, pela data de pagamento (só o que foi pago) ----------
   renderResumo() {
-    // O mês é definido pela data de pagamento: entra só o que já foi pago, no mês em que foi pago
-    const doMes = ym => D.dados.filter(d => d.pgto && d.pgto.slice(0, 7) === ym);
-    const l = doMes(D.mes).sort((a, b) => b.pgto.localeCompare(a.pgto));
-    const total = soma(l), ant = soma(doMes(addMes(D.mes, -1)));
-    $('d-mesNome').textContent = nomeMesCap(D.mes);
-    $('d-resTotal').textContent = brl(total);
-    $('d-resQtd').textContent = l.length;
-    $('d-resMedia').textContent = l.length ? 'média ' + brl(total / l.length) : '';
-    if (ant > 0) {
-      const p = (total - ant) / ant * 100;
-      $('d-resDelta').innerHTML = `<span class="${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(0)}%</span> vs mês anterior`;
-    } else $('d-resDelta').textContent = '';
-    barras('d-resCat', agrupar(l, D.chCat));
-    $('d-resLista').innerHTML = l.length ? l.map(d => D.itemHTML(d, D.btnExcluir(d))).join('')
-      : '<div class="empty">Nenhum pagamento neste mês</div>';
+    const S = D.res;
+    const pagos = D.dados.filter(d => d.pgto);
+    const inicio = pagos.reduce((m, d) => d.pgto < m ? d.pgto : m, G.hoje);
+    const cats = Object.entries(agrupar(pagos, D.chCat)).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    resumoFiltros('d', S, 'Categoria', cats, inicio, D.renderResumo);
+    const b = norm(S.busca);
+    const l = pagos.filter(d => d.pgto >= S.de && d.pgto <= S.ate && (!S.alvo || D.chCat(d) === S.alvo)
+      && (!b || norm([d.desc, d.cat, d.usuario, brl(d.valor), dataBR(d.pgto)].join(' ')).includes(b)));
+    tabelao('d-resTab', l, [
+      { k: 'pgto', t: 'Pagamento', data: true, v: d => d.pgto, h: d => dataCurta(d.pgto), tot: () => 'Total' },
+      { k: 'desc', t: 'Descrição', v: d => d.desc, cls: 'desc', tot: l => plural(l.length, 'lançamento', 'lançamentos') },
+      { k: 'valor', t: 'Valor', num: true, v: d => d.valor, h: d => brl(d.valor), tot: l => brl(soma(l)) },
+      COL_ANEXO,
+      ...(S.alvo ? [] : [{ k: 'cat', t: 'Categoria', v: D.chCat }]),
+      { k: 'venc', t: 'Vencimento', data: true, v: d => d.venc, h: d => dataCurta(d.venc) },
+      { k: 'usuario', t: 'Lançado por', v: d => d.usuario || '' }
+    ], S, D.renderResumo, 'Nenhum lançamento pago neste período');
   },
 
   // ---------- Relatório (período livre; o pago entra pela data de pagamento) ----------
@@ -856,8 +1037,7 @@ $('d-venc').addEventListener('change', () => { if ($('d-pago').checked) $('d-pgt
 $('d-chParc').onclick = e => { const b = e.target.closest('.chip'); if (b) { $('d-parcelas').value = b.dataset.n; D.atualizarParcHint(); } };
 $('d-modoBox').onclick = e => { const b = e.target.closest('.chip'); if (b) { D.modoTotal = b.dataset.modo === 'total'; D.atualizarParcHint(); } };
 $('d-btnSalvar').onclick = D.salvar;
-$('d-mesAnt').onclick = () => { D.mes = addMes(D.mes, -1); D.renderResumo(); };
-$('d-mesProx').onclick = () => { D.mes = addMes(D.mes, 1); D.renderResumo(); };
+$('d-resBusca').addEventListener('input', e => { D.res.busca = e.target.value; D.renderResumo(); });
 $('mod-desp').addEventListener('click', async e => {
   const pg = e.target.closest('[data-pagar]'), del = e.target.closest('[data-del]');
   const pd = e.target.closest('[data-pagardata]'), conf = e.target.closest('[data-confpg]'), anx = e.target.closest('[data-anexar]');
@@ -1262,6 +1442,8 @@ const MOCK = (() => {
   lanc('LUMINÁRIAS', 'MÓVEIS E DECORAÇÃO', 420, dias(12), true);
   lanc('FRETE DA GELADEIRA', 'OUTROS', 120, dias(75), true);
   lanc('MÁQUINA DE LAVAR', 'ELETRO', 2399, dias(-6), false);
+  desp.find(d => d.desc === 'MICRO-ONDAS').anexo = URL_DRIVE + 'nota-micro-pdf';
+  desp.find(d => d.desc === 'CORTINAS SALA').anexo = URL_DRIVE + 'orcamento, ' + URL_DRIVE + 'recibo';
 
   let fixas = [];
 
@@ -1276,7 +1458,29 @@ const MOCK = (() => {
     vn('Garantia', 'Sofá 3 lugares', dias(120), vd(245), '')
   ];
 
+  // Anexo de exemplo: link com "pdf" vira um PDF de 2 páginas; os outros, uma imagem
+  const pdfExemplo = nome => {
+    const pag = (n, txt) => { const s = `BT /F1 20 Tf 30 150 Td (${txt}) Tj ET`; return [`${n} 0 obj<</Length ${s.length}>>stream\n${s}\nendstream endobj`]; };
+    const objs = ['1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj', '2 0 obj<</Type/Pages/Kids[3 0 R 4 0 R]/Count 2>>endobj',
+      '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 420 300]/Contents 5 0 R/Resources<</Font<</F1 7 0 R>>>>>>endobj',
+      '4 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 420 300]/Contents 6 0 R/Resources<</Font<</F1 7 0 R>>>>>>endobj',
+      ...pag(5, nome + ' - pagina 1'), ...pag(6, 'Pagina 2 - total R$ 123,45'), '7 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj'];
+    let txt = '%PDF-1.4\n', offs = [];
+    objs.forEach(o => { offs.push(txt.length); txt += o + '\n'; });
+    const xref = txt.length;
+    txt += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('')
+      + `trailer<</Size ${objs.length + 1}/Root 1 0 R>>\nstartxref\n${xref}\n%%EOF`;
+    return btoa(txt);
+  };
+  const imgExemplo = nome => btoa('<svg xmlns="http:' + '/' + '/www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="#fffbe8"/>'
+    + `<text x="40" y="80" font-size="34" font-family="sans-serif">${nome}</text><text x="40" y="140" font-size="22" font-family="sans-serif">Comprovante de exemplo</text>`
+    + `<rect x="40" y="200" width="520" height="2" fill="#999"/><text x="40" y="260" font-size="26" font-family="sans-serif">TOTAL R$ 200,00</text></svg>`);
   return {
+    anexoVer: (mod, url) => {
+      const nome = (url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/) || [, 'anexo'])[1];
+      return /pdf/.test(nome) ? { nome: nome + '.pdf', url, mime: 'application/pdf', data: pdfExemplo(nome) }
+        : { nome: nome + '.svg', url, mime: 'image/svg+xml', data: imgExemplo(nome) };
+    },
     getTudo: () => ({ usuario: { nome: 'BRUNO' }, hoje: today, desp, fixas, venc }),
     despSalvar: itens => {
       itens.forEach(it => {

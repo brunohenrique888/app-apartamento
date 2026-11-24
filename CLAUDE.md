@@ -51,7 +51,10 @@ Funções novas que mexem em dados: sempre oferecer **simulação** antes e back
 ## Regras de negócio (herdadas do app-lancamentos)
 - **Parcelas**: uma linha por mês, sufixo `(1/3)` na descrição; centavos de arredondamento na última; só a 1ª recebe data de pagamento.
 - **Pago x a pagar**: pago = data de pagamento preenchida. "A pagar" tem "Pago hoje" e 📅 (data escolhida).
-- **Resumos** agrupam pela **data de pagamento** (só o que foi pago).
+- **Resumo** (nov/2026) = tabelão: categoria + período De/Até, busca, ordenação por coluna, totais e 👁 para ver o anexo.
+  Entra pela **data de pagamento** (só o que foi pago). O Relatório (gráficos) continua separado.
+- **Anexos**: "👁 ver" abre dentro do app (servidor `anexoVer` lê o arquivo no Drive; PDF desenhado com pdf.js do cdnjs).
+  Só entrega arquivo cujo link está num lançamento de Despesas ou Vencimentos. "＋ incluir anexo" acrescenta arquivo.
 - **Vencimentos**: guarda só SITUAÇÃO = ATIVO/CONCLUÍDO/CANCELADO; o status (em dia/vence em breve/vencido) é calculado.
   Garantia não se renova. **Renovar** cria o próximo e marca o atual CONCLUÍDO.
 

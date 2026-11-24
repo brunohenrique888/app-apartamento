@@ -377,6 +377,37 @@ function vencAnexar(chave, row, id, anexo) {
 }
 
 // =====================================================================
+// Ver anexo dentro do app (foto ou PDF), sem depender de permissão no Drive de quem está vendo.
+// O arquivo só é entregue se o link estiver num lançamento do app (despesas ou vencimentos).
+// =====================================================================
+const LIMITE_VER_ANEXO = 20 * 1024 * 1024;
+
+/** mod = 'd' (despesas) | 'v' (vencimentos); url = link do anexo. */
+function anexoVer(chave, mod, url) {
+  usuario_(chave);
+  const id = idDrive_(url);
+  if (!id) throw new Error('Link de anexo não reconhecido.');
+  const ler = { d: lerDesp_, v: lerVenc_ }[mod];
+  if (!ler) throw new Error('Módulo inválido.');
+  const visivel = ler().some(r => (String(r.anexo || '').match(/https?:\/\/[^\s,;]+/g) || []).some(x => idDrive_(x) === id));
+  if (!visivel) throw new Error('Este anexo não está em nenhum lançamento do app.');
+  const f = DriveApp.getFileById(id);
+  const nome = f.getName(), link = f.getUrl();
+  // Arquivo do Google (Docs/Planilhas) vai como PDF
+  const blob = /^application\/vnd\.google-apps/.test(f.getMimeType()) ? f.getAs('application/pdf') : f.getBlob();
+  const bytes = blob.getBytes();
+  if (bytes.length > LIMITE_VER_ANEXO) return { nome: nome, url: link, grande: Math.round(bytes.length / 1048576) };
+  return { nome: nome, url: link, mime: blob.getContentType() || f.getMimeType(), data: Utilities.base64Encode(bytes) };
+}
+
+/** ID do arquivo nos formatos de link do Drive: .../file/d/ID/..., ...open?id=ID, ...uc?id=ID */
+function idDrive_(url) {
+  const s = String(url || '');
+  const m = s.match(/\/d\/([\w-]{20,})/) || s.match(/[?&]id=([\w-]{20,})/);
+  return m ? m[1] : '';
+}
+
+// =====================================================================
 // Alerta semanal por e-mail (vencidos, vencem em até 30 dias, garantias acabando)
 // =====================================================================
 
