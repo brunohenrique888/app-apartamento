@@ -118,6 +118,10 @@
   /* Visor de anexos (foto ou PDF) dentro do app */
   a.ver { color: var(--pri); font-weight: 600; text-decoration: none; white-space: nowrap; }
   a.anexar { color: var(--muted); text-decoration: none; white-space: nowrap; }
+  #editor { position: fixed; inset: 0; z-index: 12; background: rgba(20,26,23,.5); overflow-y: auto; padding: 16px 16px 96px; -webkit-overflow-scrolling: touch; }
+  #editor .card { max-width: 480px; margin: 0 auto; }
+  #editor h3 { margin: 0 0 4px; }
+  #editor #ed-campos { margin-top: 14px; }
   #visor { position: fixed; inset: 0; z-index: 30; background: #1b1f20; display: flex; flex-direction: column; }
   #visor .vt { display: flex; align-items: center; gap: 6px; padding: 10px 10px; color: #fff; font-size: 14px; }
   #visor .vt .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -349,6 +353,15 @@
 
 <div id="loading">Carregando…</div>
 <div id="toast"></div>
+<div id="editor" class="hidden" role="dialog" aria-label="Editar lançamento">
+  <div class="card">
+    <h3 id="ed-titulo">Editar</h3>
+    <div class="hint" id="ed-hint"></div>
+    <div id="ed-campos"></div>
+    <button type="button" class="btn" id="ed-salvar">Salvar alterações</button>
+    <button type="button" class="btn sec" id="ed-cancelar">Cancelar</button>
+  </div>
+</div>
 <div id="visor" class="hidden" role="dialog" aria-label="Anexo">
   <div class="vt">
     <button type="button" id="vs-ant" aria-label="Anexo anterior">‹</button>
@@ -803,6 +816,76 @@ function anexarArquivo(fn, args) {
 }
 
 // =====================================================================
+// Editor de lançamento já gravado. Campos: { k, rot, tipo, ops, vazio, dica }
+// tipo: 'texto' | 'valor' | 'data' | 'lista' (só as opções) | 'livre' (sugere as opções, aceita outra)
+// vazio: pode ficar em branco. salvar(novo, mudou) grava e devolve true para fechar.
+// =====================================================================
+const ED = {
+  campos: [], orig: {}, salvar: null,
+
+  abrir(titulo, campos, vals, hint, salvar) {
+    ED.campos = campos; ED.orig = vals; ED.salvar = salvar;
+    $('ed-titulo').textContent = titulo;
+    $('ed-hint').innerHTML = hint || '';
+    $('ed-campos').innerHTML = campos.map(c => {
+      const id = 'ed-' + c.k, v = vals[c.k] == null ? '' : vals[c.k];
+      let inp;
+      if (c.tipo === 'lista') {
+        const ops = !v || c.ops.includes(v) ? c.ops : [v, ...c.ops];
+        inp = `<select id="${id}">${ops.map(o => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+      } else if (c.tipo === 'livre') {
+        inp = `<input type="text" id="${id}" list="${id}-dl" value="${esc(v)}" autocomplete="off">`
+          + `<datalist id="${id}-dl">${c.ops.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+      } else if (c.tipo === 'data') {
+        inp = `<input type="date" id="${id}" value="${esc(v)}">`;
+      } else if (c.tipo === 'valor') {
+        const vv = v === '' || (c.vazio && !v) ? '' : num(v, c.casas || 2);
+        inp = `<input type="text" id="${id}" inputmode="decimal" value="${vv}" autocomplete="off">`;
+      } else {
+        inp = `<input type="text" id="${id}" value="${esc(v)}" autocomplete="off">`;
+      }
+      return `<label class="f" for="${id}">${esc(c.rot)}</label>${inp}` + (c.dica ? `<div class="hint">${c.dica}</div>` : '');
+    }).join('');
+    $('ed-salvar').disabled = false;
+    $('editor').classList.remove('hidden');
+    $('editor').scrollTop = 0;
+  },
+
+  fechar() { $('editor').classList.add('hidden'); $('ed-campos').innerHTML = ''; ED.salvar = null; },
+
+  ler() {
+    const n = {};
+    ED.campos.forEach(c => {
+      const v = $('ed-' + c.k).value;
+      n[c.k] = c.tipo === 'valor' ? (String(v).trim() === '' ? '' : parseNum(v)) : (c.tipo === 'data' ? v : norm(v));
+    });
+    return n;
+  },
+
+  mostrar(c, v) {
+    if (v === '' || v == null) return '(vazio)';
+    return c.tipo === 'valor' ? (c.casas ? num(v, c.casas) : brl(v)) : c.tipo === 'data' ? dataBR(v) : v;
+  },
+
+  async confirmar() {
+    const n = ED.ler();
+    const falta = ED.campos.filter(c => !c.vazio && n[c.k] === '').map(c => c.rot);
+    if (falta.length) return toast('Falta preencher: ' + falta.join(', '), true);
+    const igual = (c, a, b) => c.tipo === 'valor' ? Math.abs((+a || 0) - (+b || 0)) < 0.0005 : String(a || '') === String(b || '');
+    const mud = ED.campos.filter(c => !igual(c, ED.orig[c.k], n[c.k]));
+    if (!mud.length) return toast('Nada foi alterado');
+    if (!confirm('Confirmar a alteração?\n\n' + mud.map(c => `${c.rot}: ${ED.mostrar(c, ED.orig[c.k])} → ${ED.mostrar(c, n[c.k])}`).join('\n'))) return;
+    $('ed-salvar').disabled = true;
+    const ok = await ED.salvar(n, mud.map(c => c.k));
+    $('ed-salvar').disabled = false;
+    if (ok) ED.fechar();
+  }
+};
+$('ed-salvar').onclick = ED.confirmar;
+$('ed-cancelar').onclick = ED.fechar;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('editor').classList.contains('hidden')) ED.fechar(); });
+
+// =====================================================================
 // Módulo: Despesas
 // =====================================================================
 const D = {
@@ -923,19 +1006,37 @@ const D = {
       + `<div class="s">${num(f.size / 1024 / 1024, 1)} MB</div></div><button type="button" class="sm del" data-tirar="${i}" title="Tirar">✕</button></div>`).join('');
   },
 
-  itemHTML(d, acoes) {
+  // linkEd: ✏ como link na linha de baixo (no A pagar, onde os botões de pagar já ocupam o espaço)
+  itemHTML(d, acoes, linkEd) {
     const sub = [dataBR(d.venc), d.cat].filter(Boolean).map(esc).join(' · ')
       + (d.pgto ? (d.pgto !== d.venc ? ' · pago ' + dataBR(d.pgto) : '') : ' · <span style="color:var(--warn)">a pagar</span>')
       + (d.usuario ? ' · por ' + esc(d.usuario) : '')
-      + linksAnexo(d.anexo) + linkAnexar(d.row);
+      + linksAnexo(d.anexo) + linkAnexar(d.row)
+      + (linkEd ? ` · <a href="#" class="anexar" data-ed="${d.row}">✏ editar</a>` : '');
     return `<div class="item"><div class="grow"><div class="t">${esc(d.desc)}</div><div class="s">${sub}</div></div><div class="v">${brl(d.valor)}</div>${acoes || ''}</div>`;
   },
 
-  btnExcluir: d => `<button class="sm del" data-del="${d.row}" title="Excluir">✕</button>`,
+  botoesEd: d => `<button class="sm" data-ed="${d.row}" title="Editar">✏</button><button class="sm del" data-del="${d.row}" title="Excluir">✕</button>`,
+
+  // Corrige um lançamento (uma linha da planilha). Numa conta parcelada, muda só esta parcela.
+  editar(d) {
+    ED.abrir('Editar despesa', [
+      { k: 'desc', rot: 'Descrição', tipo: 'texto' },
+      { k: 'valor', rot: 'Valor (R$)', tipo: 'valor' },
+      { k: 'cat', rot: 'Categoria', tipo: 'livre', ops: D.categorias() },
+      { k: 'venc', rot: 'Vencimento', tipo: 'data' },
+      { k: 'pgto', rot: 'Data do pagamento', tipo: 'data', vazio: true, dica: 'Em branco = a pagar.' }
+    ], d, D.semParcela(d.desc) !== norm(d.desc) ? '<b>Conta parcelada:</b> a alteração vale só para esta parcela.' : '', async n => {
+      if (!(n.valor > 0)) { toast('O valor precisa ser maior que zero', true); return false; }
+      const ok = await chamar('despEditar', d.row, { desc: d.desc }, n);
+      if (ok) toast('Despesa corrigida ✓');
+      return ok;
+    });
+  },
 
   renderUltimos() {
     const l = D.dados.slice().sort((a, b) => b.row - a.row).slice(0, 8);
-    $('d-ultimos').innerHTML = l.length ? l.map(d => D.itemHTML(d, D.btnExcluir(d))).join('') : '<div class="empty">Nenhum lançamento ainda</div>';
+    $('d-ultimos').innerHTML = l.length ? l.map(d => D.itemHTML(d, D.botoesEd(d))).join('') : '<div class="empty">Nenhum lançamento ainda</div>';
   },
 
   renderAPagar() {
@@ -944,7 +1045,7 @@ const D = {
     $('d-bPag').textContent = l.length; $('d-bPag').classList.toggle('hidden', !l.length);
     $('d-pagTotal').textContent = brl(soma(l));
     $('d-pagVenc').textContent = venc.length ? `${venc.length} · ${brl(soma(venc))}` : '0';
-    $('d-pagLista').innerHTML = l.length ? l.map(d => D.itemHTML(d, botoesPagar(d.row, 'Pago hoje'))
+    $('d-pagLista').innerHTML = l.length ? l.map(d => D.itemHTML(d, botoesPagar(d.row, 'Pago hoje'), true)
       .replace('class="item"', d.venc < G.hoje ? 'class="item atrasado"' : 'class="item"')).join('')
       : '<div class="empty">Nenhuma conta em aberto</div>';
   },
@@ -1008,7 +1109,7 @@ const D = {
     l.sort(R.ord === 'valor' ? (x, y) => y.valor - x.valor : (x, y) => ref(y).localeCompare(ref(x)) || y.row - x.row);
     $('d-relResumo').innerHTML = (R.fCat ? `<button type="button" class="chip on" data-limpa="fCat">Categoria: ${esc(R.fCat)} ✕</button>` : '')
       + `<span>${l.length} lançamento(s) · <b>${brl(soma(l))}</b></span>`;
-    $('d-relLista').innerHTML = l.length ? l.slice(0, R.lim).map(d => D.itemHTML(d)).join('')
+    $('d-relLista').innerHTML = l.length ? l.slice(0, R.lim).map(d => D.itemHTML(d, D.botoesEd(d))).join('')
       + (l.length > R.lim ? `<button class="btn sec" data-mais="1">Mostrar mais (${l.length - R.lim})</button>` : '')
       : '<div class="empty">Nenhum lançamento encontrado</div>';
   }
@@ -1059,6 +1160,9 @@ $('mod-desp').addEventListener('click', async e => {
     if (await chamar('despMarcarPago', d.row, d.desc, data)) toast(`Pago em ${dataBR(data)} ✓`);
   } else if (e.target.closest('[data-cancpg]')) {
     e.target.closest('.pdata').remove();
+  } else if (e.target.closest('[data-ed]')) {
+    e.preventDefault();
+    D.editar(acha(e.target.closest('[data-ed]').dataset.ed));
   } else if (del) {
     const d = acha(del.dataset.del);
     if (confirm(`Excluir "${d.desc}" de ${brl(d.valor)} (${dataBR(d.venc)})? Isso apaga a linha na planilha.`)
@@ -1493,6 +1597,12 @@ const MOCK = (() => {
     },
     despMarcarPago: (row, desc, data) => { desp.find(x => x.row === row).pgto = data; return { desp }; },
     despExcluir: row => { desp = desp.filter(x => x.row !== row); return { desp }; },
+    despEditar: (row, antes, n) => {
+      const x = desp.find(d => d.row === row);
+      if (!x || x.desc !== antes.desc) throw new Error('A planilha mudou desde o último carregamento. Atualize a tela e tente de novo.');
+      Object.assign(x, n, { valor: +n.valor });
+      return { desp };
+    },
     despAnexar: (row, desc, a) => { const d = desp.find(x => x.row === row); d.anexo = [d.anexo, URL_DRIVE + a.name].filter(Boolean).join(', '); return { desp }; },
     fixaSalvar: it => {
       if (fixas.some(f => f.ativa && f.desc === it.desc)) throw new Error('Já existe a conta fixa ' + it.desc + '.');

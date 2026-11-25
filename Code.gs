@@ -241,6 +241,38 @@ function despExcluir(chave, row, desc) {
   return { desp: lerDesp_() };
 }
 
+/**
+ * Corrige um lançamento já gravado (uma linha; numa conta parcelada, só aquela parcela).
+ * antes = { desc } como estava na tela (confere a linha).
+ * novo = { venc:'yyyy-MM-dd', cat, valor, desc, pgto:'yyyy-MM-dd'|'' }.
+ * Não mexe no carimbo, no anexo nem em LANÇADO POR.
+ */
+function despEditar(chave, row, antes, novo) {
+  usuario_(chave);
+  const cat = String(novo.cat || '').trim().toUpperCase();
+  const desc = String(novo.desc || '').trim().toUpperCase();
+  if (!novo.venc || !desc || !cat || !(Number(novo.valor) > 0)) throw new Error('Preencha descrição, valor, categoria e vencimento.');
+  comLock_(() => {
+    const sh = ss_().getSheetByName(ABA_DESP);
+    const tz = tz_();
+    linhaConferida_(sh, row, CAB_DESP.length, r => String(r[COL_D.DESC] || '').trim() === String(antes.desc || '').trim());
+    const valor = Math.round(Number(novo.valor) * 100) / 100;
+    // B:E = vencimento, categoria, valor, descrição
+    const be = [Utilities.parseDate(novo.venc, tz, 'yyyy-MM-dd'), cat, valor, desc];
+    semFiltro_(sh, () => {
+      sh.getRange(row, COL_D.VENC + 1, 1, 4).setValues([be]);
+      sh.getRange(row, COL_D.PGTO + 1).setValue(novo.pgto ? Utilities.parseDate(novo.pgto, tz, 'yyyy-MM-dd') : '');
+    });
+    sh.getRange(row, COL_D.VENC + 1).setNumberFormat('dd/MM/yyyy');
+    sh.getRange(row, COL_D.PGTO + 1).setNumberFormat('dd/MM/yyyy');
+    sh.getRange(row, COL_D.VALOR + 1).setNumberFormat('"R$" #,##0.00');
+    conferirEdicao_(sh, row, CAB_DESP.length, l =>
+      String(l[COL_D.DESC]).trim() === desc && String(l[COL_D.CAT]).trim().toUpperCase() === cat
+      && Math.abs(parseNum_(l[COL_D.VALOR]) - valor) < 0.005);
+  });
+  return { desp: lerDesp_() };
+}
+
 function despAnexar(chave, row, desc, anexo) {
   usuario_(chave);
   acrescentarAnexo_(ABA_DESP, PASTAS.DESP, COL_D.ANEXO, anexo, sh => {
@@ -553,6 +585,37 @@ function linhaConferida_(sh, row, ncols, confere) {
   const r = sh.getRange(row, 1, 1, ncols).getValues()[0];
   if (!confere(r)) throw new Error('A planilha mudou desde o último carregamento. Atualize a tela e tente de novo.');
   return r;
+}
+
+/**
+ * Grava em linha já existente mesmo com filtro ligado na aba (linha escondida pelo filtro não recebe o valor,
+ * sem erro nenhum — aconteceu no app dos pais em 24/11/2026). Tira os critérios, grava e devolve como estavam.
+ */
+function semFiltro_(sh, fn) {
+  const f = sh.getFilter();
+  if (!f) return fn();
+  const rg = f.getRange(), c0 = rg.getColumn(), crit = [];
+  for (let c = c0; c < c0 + rg.getNumColumns(); c++) {
+    const k = f.getColumnFilterCriteria(c);
+    if (k) crit.push([c, k]);
+  }
+  if (!crit.length) return fn();
+  crit.forEach(([c]) => f.removeColumnFilterCriteria(c));
+  try {
+    const res = fn();
+    SpreadsheetApp.flush();
+    return res;
+  } finally {
+    crit.forEach(([c, k]) => { try { f.setColumnFilterCriteria(c, k); } catch (e) { console.log('Filtro col ' + c + ': ' + e.message); } });
+  }
+}
+
+// Relê a linha depois de uma edição: se a planilha não aceitou (filtro, proteção), avisa em vez de dar "✓" falso.
+function conferirEdicao_(sh, row, ncols, confere) {
+  SpreadsheetApp.flush();
+  if (!confere(sh.getRange(row, 1, 1, ncols).getValues()[0])) {
+    throw new Error('A planilha não aceitou a alteração (linha ' + row + '). Confira se há filtro ou proteção na aba e avise o Bruno.');
+  }
 }
 
 function salvarAnexo_(nomePasta, anexo) {
